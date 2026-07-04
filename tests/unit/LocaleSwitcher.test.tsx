@@ -43,13 +43,19 @@ describe('LocaleSwitcher', () => {
     const user = userEvent.setup();
     renderSwitcher('en');
     await user.click(screen.getByRole('button', { name: 'עברית' }));
-    expect(replace).toHaveBeenCalledExactlyOnceWith('/', { locale: 'he' });
+    expect(replace).toHaveBeenCalledExactlyOnceWith('/', {
+      locale: 'he',
+      scroll: false,
+    });
   });
 
   it('switches he -> en preserving the current path', async () => {
     const user = userEvent.setup();
     renderSwitcher('he');
     await user.click(screen.getByRole('button', { name: 'English' }));
-    expect(replace).toHaveBeenCalledExactlyOnceWith('/', { locale: 'en' });
+    expect(replace).toHaveBeenCalledExactlyOnceWith('/', {
+      locale: 'en',
+      scroll: false,
+    });
   });
 });
