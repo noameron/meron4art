@@ -4,8 +4,8 @@ import { useLocale } from 'next-intl';
 import { usePathname, useRouter } from '@/i18n/navigation';
 
 const LOCALES = [
-  { code: 'en', flag: '🇺🇸', label: 'EN', name: 'English' },
-  { code: 'he', flag: '🇮🇱', label: 'עב', name: 'עברית' },
+  { code: 'en', flag: '🇺🇸', name: 'English' },
+  { code: 'he', flag: '🇮🇱', name: 'עברית' },
 ] as const;
 
 export default function LocaleSwitcher() {
@@ -15,7 +15,7 @@ export default function LocaleSwitcher() {
 
   return (
     <div className="fixed top-4 end-4 z-50 flex gap-1 rounded-full border border-neutral-200 bg-white/90 p-1 shadow-sm backdrop-blur-sm">
-      {LOCALES.map(({ code, flag, label, name }) => (
+      {LOCALES.map(({ code, flag, name }) => (
         <button
           key={code}
           type="button"
@@ -25,13 +25,11 @@ export default function LocaleSwitcher() {
             // keep query params (e.g. the active ?tab=) across the switch
             router.replace(pathname + window.location.search, { locale: code })
           }
-          className={`rounded-full px-3 py-1.5 text-xs font-medium transition-colors ${
-            locale === code
-              ? 'bg-neutral-900 text-white'
-              : 'text-neutral-600 hover:text-neutral-900'
+          className={`rounded-full px-2.5 py-1.5 text-sm transition-colors ${
+            locale === code ? 'bg-neutral-900' : 'opacity-50 hover:opacity-100'
           }`}
         >
-          {flag} {label}
+          {flag}
         </button>
       ))}
     </div>

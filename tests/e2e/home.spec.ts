@@ -105,6 +105,15 @@ test.describe('home page', () => {
     ).toBeVisible();
   });
 
+  test('tab bar stays pinned to the top while scrolling', async ({ page }) => {
+    await page.goto('/en');
+    await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
+    const nav = page.locator('nav');
+    expect(
+      await nav.evaluate((el) => el.getBoundingClientRect().top),
+    ).toBeLessThanOrEqual(1);
+  });
+
   test('active tab survives a locale switch', async ({ page }) => {
     await page.goto('/en');
     await page.getByRole('button', { name: 'Pure Paintings' }).click();

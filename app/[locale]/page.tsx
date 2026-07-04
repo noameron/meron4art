@@ -5,7 +5,7 @@ import {
   siteSettingsQuery,
 } from '@/sanity/lib/queries';
 import type { PortfolioItem, SiteSettings } from '@/sanity/lib/types';
-import Hero from '@/components/Hero';
+import { HeroIntro, HeroBanner } from '@/components/Hero';
 import GalleryGrid from '@/components/GalleryGrid';
 
 export default async function Home({
@@ -23,8 +23,11 @@ export default async function Home({
 
   return (
     <main>
-      <Hero heroImage={settings?.heroImage} />
-      <GalleryGrid items={items} />
+      <GalleryGrid
+        items={items}
+        intro={<HeroIntro />}
+        banner={<HeroBanner heroImage={settings?.heroImage} />}
+      />
     </main>
   );
 }
