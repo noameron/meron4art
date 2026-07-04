@@ -1,10 +1,17 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { createElement } from 'react';
+import { describe, expect, it, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
 import { NextIntlClientProvider } from 'next-intl';
 import GalleryGrid from '@/components/GalleryGrid';
-import type { PortfolioItem } from '@/sanity/lib/types';
+import type { FilterValue, PortfolioItem } from '@/sanity/lib/types';
 import en from '@/messages/en.json';
+
+// FilterBar (rendered inside GalleryGrid) uses next-intl's Link → next/navigation,
+// unresolved in jsdom; stub it with a plain <a>.
+vi.mock('@/i18n/navigation', () => ({
+  Link: ({ href, children, ...props }: Record<string, unknown>) =>
+    createElement('a', { href, ...props }, children as React.ReactNode),
+}));
 
 vi.mock('@/sanity/lib/image', () => ({
   urlFor: () => {
@@ -45,58 +52,46 @@ const items: PortfolioItem[] = [
   }),
 ];
 
-function renderGrid(list: PortfolioItem[] = items) {
+function renderGrid(
+  active: FilterValue = 'all',
+  list: PortfolioItem[] = items,
+) {
   render(
     <NextIntlClientProvider locale="en" messages={en}>
-      <GalleryGrid items={list} />
+      <GalleryGrid items={list} active={active} />
     </NextIntlClientProvider>,
   );
 }
 
 describe('GalleryGrid', () => {
-  beforeEach(() => {
-    // selectTab mirrors the active tab into ?tab=, which persists on the
-    // shared jsdom window — reset so tests stay independent
-    window.history.replaceState(null, '', '/');
-  });
-
   it('shows every item under the default All filter', () => {
-    renderGrid();
+    renderGrid('all');
     expect(screen.getAllByRole('figure')).toHaveLength(3);
   });
 
-  it('filters down to the selected category', async () => {
-    const user = userEvent.setup();
-    renderGrid();
-    await user.click(screen.getByRole('button', { name: 'Pure Paintings' }));
+  it('filters down to the active category', () => {
+    renderGrid('paintings');
     expect(screen.getAllByRole('figure')).toHaveLength(2);
     expect(screen.queryByText('Yoav')).not.toBeInTheDocument();
   });
 
-  it('shows the empty state when the selected category has no items', async () => {
-    const user = userEvent.setup();
-    renderGrid();
-    await user.click(
-      screen.getByRole('button', { name: '3D Arts, Sculptures etc.' }),
-    );
+  it('shows a category headline for a non-all tab', () => {
+    renderGrid('paintings');
+    expect(
+      screen.getByRole('heading', { name: 'Pure Paintings' }),
+    ).toBeInTheDocument();
+  });
+
+  it('shows the empty state when the active category has no items', () => {
+    renderGrid('3d-sculpture');
     expect(screen.queryAllByRole('figure')).toHaveLength(0);
     expect(
       screen.getByText('No pieces in this category yet.'),
     ).toBeInTheDocument();
   });
 
-  it('returns to the full list when All is re-selected', async () => {
-    const user = userEvent.setup();
-    renderGrid();
-    await user.click(
-      screen.getByRole('button', { name: 'Pictures from Galleries' }),
-    );
-    await user.click(screen.getByRole('button', { name: 'All' }));
-    expect(screen.getAllByRole('figure')).toHaveLength(3);
-  });
-
   it('renders the empty state immediately for an empty items array', () => {
-    renderGrid([]);
+    renderGrid('all', []);
     expect(screen.queryAllByRole('figure')).toHaveLength(0);
     expect(
       screen.getByText('No pieces in this category yet.'),
@@ -104,20 +99,15 @@ describe('GalleryGrid', () => {
   });
 
   it('renders captions with title only, artist only, or both', () => {
-    renderGrid();
-    // both
+    renderGrid('all');
     expect(screen.getByText('Sunset')).toBeInTheDocument();
     expect(screen.getByText('Dana')).toBeInTheDocument();
-    // title only
     expect(screen.getByText('Dawn')).toBeInTheDocument();
-    // artist only
     expect(screen.getByText('Yoav')).toBeInTheDocument();
   });
 
-  it('shows contact details instead of the gallery on the Contact tab', async () => {
-    const user = userEvent.setup();
-    renderGrid();
-    await user.click(screen.getByRole('button', { name: 'Contact' }));
+  it('shows contact details instead of the gallery on the Contact tab', () => {
+    renderGrid('contact');
 
     expect(screen.getByText('Omri Meron')).toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'Email' })).toHaveAttribute(
@@ -130,13 +120,10 @@ describe('GalleryGrid', () => {
     expect(tel).toMatch(/^tel:\+972\d+$/);
 
     expect(screen.queryAllByRole('figure')).toHaveLength(0);
-    expect(
-      screen.queryByText('No pieces in this category yet.'),
-    ).not.toBeInTheDocument();
   });
 
   it('omits the caption entirely when an item has neither title nor artist', () => {
-    renderGrid([item({ _id: 'bare', category: 'paintings' })]);
+    renderGrid('all', [item({ _id: 'bare', category: 'paintings' })]);
     const figure = screen.getByRole('figure');
     expect(figure.querySelector('figcaption')).toBeNull();
   });

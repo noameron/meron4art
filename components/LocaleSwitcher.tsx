@@ -24,8 +24,9 @@ export default function LocaleSwitcher() {
           aria-label={name}
           aria-pressed={locale === code}
           onClick={() =>
-            // keep query params (e.g. the active ?tab=) across the switch
-            router.replace(pathname + window.location.search, { locale: code })
+            // pathname is locale-stripped, so this keeps the active tab
+            // (e.g. /paintings) and just swaps the locale prefix
+            router.replace(pathname, { locale: code })
           }
           className={`rounded-full px-2.5 py-1.5 text-sm transition-colors ${
             locale === code ? 'bg-neutral-900' : 'opacity-50 hover:opacity-100'

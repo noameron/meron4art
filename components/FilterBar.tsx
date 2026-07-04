@@ -3,15 +3,12 @@
 import { useState } from 'react';
 import Image from 'next/image';
 import { useTranslations } from 'next-intl';
-import { CATEGORY_VALUES, type Category } from '@/sanity/lib/types';
-
-export type FilterValue = Category | 'all' | 'contact';
-
-export const FILTER_VALUES: FilterValue[] = [
-  'all',
-  ...CATEGORY_VALUES,
-  'contact',
-];
+import { Link } from '@/i18n/navigation';
+import {
+  FILTER_VALUES,
+  pathForFilter,
+  type FilterValue,
+} from '@/sanity/lib/types';
 
 export function Logo({ className }: { className: string }) {
   return (
@@ -25,29 +22,19 @@ export function Logo({ className }: { className: string }) {
   );
 }
 
-export default function FilterBar({
-  active,
-  onChange,
-}: {
-  active: FilterValue;
-  onChange: (value: FilterValue) => void;
-}) {
+export default function FilterBar({ active }: { active: FilterValue }) {
   const t = useTranslations('Filters');
   const [open, setOpen] = useState(false);
 
-  const select = (value: FilterValue) => {
-    setOpen(false);
-    onChange(value);
-  };
-
-  const tabButtons = FILTER_VALUES.map((option) => {
+  // 'all' is the bare landing route (/), reached via the logo — not a tab
+  const tabLinks = FILTER_VALUES.filter((v) => v !== 'all').map((option) => {
     const isActive = option === active;
     return (
-      <button
+      <Link
         key={option}
-        type="button"
-        onClick={() => select(option)}
-        aria-pressed={isActive}
+        href={pathForFilter(option)}
+        onClick={() => setOpen(false)}
+        aria-current={isActive ? 'page' : undefined}
         className={`text-sm tracking-wide uppercase transition-colors ${
           isActive
             ? 'text-neutral-900'
@@ -55,7 +42,7 @@ export default function FilterBar({
         }`}
       >
         {t(option)}
-      </button>
+      </Link>
     );
   });
 
@@ -63,7 +50,9 @@ export default function FilterBar({
     <nav className="sticky top-0 z-40 border-b border-neutral-200 bg-white">
       {/* mobile: logo + hamburger, options in a collapsible panel */}
       <div className="flex items-center justify-between px-6 py-4 sm:hidden">
-        <Logo className="h-6 w-auto" />
+        <Link href="/" aria-label="Home" onClick={() => setOpen(false)}>
+          <Logo className="h-6 w-auto" />
+        </Link>
         <button
           type="button"
           aria-label="Menu"
@@ -76,13 +65,15 @@ export default function FilterBar({
       </div>
       {open && (
         <div className="flex flex-col items-start gap-4 border-t border-neutral-100 px-6 py-4 sm:hidden">
-          {tabButtons}
+          {tabLinks}
         </div>
       )}
       {/* desktop: logo + options in one row */}
       <div className="hidden flex-wrap items-center gap-x-6 gap-y-2 px-6 py-6 sm:flex sm:px-12">
-        <Logo className="h-6 w-auto" />
-        {tabButtons}
+        <Link href="/" aria-label="Home" onClick={() => setOpen(false)}>
+          <Logo className="h-6 w-auto" />
+        </Link>
+        {tabLinks}
       </div>
     </nav>
   );

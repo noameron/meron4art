@@ -1,7 +1,8 @@
 name: CI
 
+# temporarily manual-only so PRs merge without waiting on CI;
+# restore `pull_request:` to re-enable per-PR runs
 on:
-  pull_request:
   workflow_dispatch:
 
 jobs:

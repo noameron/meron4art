@@ -1,7 +1,6 @@
 import { test, expect, type Page } from '@playwright/test';
 
 const EN_FILTERS = [
-  'All',
   'Pure Paintings',
   'Pictures from Galleries',
   '3D Arts, Sculptures etc.',
@@ -42,7 +41,7 @@ test.describe('home page', () => {
     await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
     for (const label of EN_FILTERS) {
       await expect(
-        page.getByRole('button', { name: label, exact: true }),
+        page.getByRole('link', { name: label, exact: true }),
       ).toBeVisible();
     }
 
@@ -55,32 +54,31 @@ test.describe('home page', () => {
     expect(errors).toEqual([]);
   });
 
-  test('category filters toggle aria-pressed and All restores the view', async ({
+  test('clicking a category navigates to its route and marks it current', async ({
     page,
   }) => {
     await page.goto('/en');
-    const all = page.getByRole('button', { name: 'All', exact: true });
-    const paintings = page.getByRole('button', { name: 'Pure Paintings' });
+    await page.getByRole('link', { name: 'Pure Paintings' }).click();
 
-    await expect(all).toHaveAttribute('aria-pressed', 'true');
-    await expect(paintings).toHaveAttribute('aria-pressed', 'false');
+    await expect(page).toHaveURL(/\/en\/paintings$/);
+    await expect(
+      page.getByRole('link', { name: 'Pure Paintings' }),
+    ).toHaveAttribute('aria-current', 'page');
+    // category headline is shown
+    await expect(
+      page.getByRole('heading', { name: 'Pure Paintings' }),
+    ).toBeVisible();
 
-    await paintings.click();
-    await expect(paintings).toHaveAttribute('aria-pressed', 'true');
-    await expect(all).toHaveAttribute('aria-pressed', 'false');
-
-    await all.click();
-    await expect(all).toHaveAttribute('aria-pressed', 'true');
+    // logo returns to the full landing view
+    await page.getByRole('link', { name: 'Home' }).first().click();
+    await expect(page).toHaveURL(/\/en$/);
   });
 
-  test('every category filter is clickable and shows items or empty state', async ({
+  test('every category route loads directly and shows items or empty state', async ({
     page,
   }) => {
-    await page.goto('/en');
-    for (const label of EN_FILTERS.slice(1)) {
-      const button = page.getByRole('button', { name: label, exact: true });
-      await button.click();
-      await expect(button).toHaveAttribute('aria-pressed', 'true');
+    for (const path of ['paintings', 'gallery-pictures', '3d-sculpture']) {
+      await page.goto(`/en/${path}`);
       const figures = page.locator('figure');
       const emptyState = page.getByText('No pieces in this category yet.');
       await expect(figures.first().or(emptyState)).toBeVisible();
@@ -95,13 +93,13 @@ test.describe('home page', () => {
     await page.getByRole('button', { name: 'עברית' }).click();
     await expect(page).toHaveURL(/\/he$/);
     await expect(page.locator('html')).toHaveAttribute('dir', 'rtl');
-    await expect(page.getByRole('button', { name: 'הכול' })).toBeVisible();
+    await expect(page.getByRole('link', { name: 'ציורים' })).toBeVisible();
 
     await page.getByRole('button', { name: 'English' }).click();
     await expect(page).toHaveURL(/\/en$/);
     await expect(page.locator('html')).toHaveAttribute('dir', 'ltr');
     await expect(
-      page.getByRole('button', { name: 'All', exact: true }),
+      page.getByRole('link', { name: 'Pure Paintings' }),
     ).toBeVisible();
   });
 
@@ -113,11 +111,12 @@ test.describe('home page', () => {
 
     // options are collapsed behind the hamburger on mobile
     await expect(
-      page.getByRole('button', { name: 'All', exact: true }),
+      page.getByRole('link', { name: 'Pure Paintings' }),
     ).toBeHidden();
 
     await page.getByRole('button', { name: 'Menu' }).click();
-    await page.getByRole('button', { name: 'Contact' }).click();
+    await page.getByRole('link', { name: 'Contact' }).click();
+    await expect(page).toHaveURL(/\/en\/contact$/);
     await expect(page.getByText('Omri Meron')).toBeVisible();
   });
 
@@ -131,23 +130,20 @@ test.describe('home page', () => {
   });
 
   test('active tab survives a locale switch', async ({ page }) => {
-    await page.goto('/en');
-    await page.getByRole('button', { name: 'Pure Paintings' }).click();
-    await expect(page).toHaveURL(/tab=paintings/);
+    await page.goto('/en/paintings');
 
     await page.getByRole('button', { name: 'עברית' }).click();
-    await expect(page).toHaveURL(/\/he\?tab=paintings$/);
-    await expect(page.getByRole('button', { name: 'ציורים' })).toHaveAttribute(
-      'aria-pressed',
-      'true',
+    await expect(page).toHaveURL(/\/he\/paintings$/);
+    await expect(page.getByRole('link', { name: 'ציורים' })).toHaveAttribute(
+      'aria-current',
+      'page',
     );
   });
 
-  test('contact tab shows the contact details with working links', async ({
+  test('contact route shows the contact details with working links', async ({
     page,
   }) => {
-    await page.goto('/en');
-    await page.getByRole('button', { name: 'Contact' }).click();
+    await page.goto('/en/contact');
 
     await expect(page.getByText('Omri Meron')).toBeVisible();
 
