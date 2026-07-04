@@ -1,9 +1,28 @@
 'use client';
 
+import Image from 'next/image';
 import { useTranslations } from 'next-intl';
 import { CATEGORY_VALUES, type Category } from '@/sanity/lib/types';
 
 export type FilterValue = Category | 'all' | 'contact';
+
+export const FILTER_VALUES: FilterValue[] = [
+  'all',
+  ...CATEGORY_VALUES,
+  'contact',
+];
+
+export function Logo({ className }: { className: string }) {
+  return (
+    <Image
+      src="/logo.jpeg"
+      alt="Studio Omri Meron"
+      width={1600}
+      height={878}
+      className={className}
+    />
+  );
+}
 
 export default function FilterBar({
   active,
@@ -14,11 +33,10 @@ export default function FilterBar({
 }) {
   const t = useTranslations('Filters');
 
-  const options: FilterValue[] = ['all', ...CATEGORY_VALUES, 'contact'];
-
   return (
-    <nav className="flex flex-wrap items-baseline gap-x-6 gap-y-2 border-b border-neutral-200 px-6 py-6 sm:px-12">
-      {options.map((option) => {
+    <nav className="sticky top-0 z-40 flex flex-wrap items-center gap-x-6 gap-y-2 border-b border-neutral-200 bg-white px-6 py-6 pe-24 sm:px-12 sm:pe-24">
+      <Logo className="h-6 w-auto" />
+      {FILTER_VALUES.map((option) => {
         const isActive = option === active;
         return (
           <button
