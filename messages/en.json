@@ -11,7 +11,8 @@
     "contact": "Contact"
   },
   "Gallery": {
-    "empty": "No pieces in this category yet."
+    "empty": "No pieces in this category yet.",
+    "view": "View full size"
   },
   "Contact": {
     "details": "Details",

@@ -1,75 +1,80 @@
+import { createElement } from 'react';
 import { describe, expect, it, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
 import { NextIntlClientProvider } from 'next-intl';
 import FilterBar from '@/components/FilterBar';
+import type { FilterValue } from '@/sanity/lib/types';
 import en from '@/messages/en.json';
 import he from '@/messages/he.json';
 
+// next-intl's Link pulls next/navigation, unresolved in jsdom; stub it with a
+// plain <a> so we test the relative hrefs FilterBar builds. The /en, /he
+// prefixing is next-intl's job and is covered by the e2e suite.
+vi.mock('@/i18n/navigation', () => ({
+  Link: ({ href, children, ...props }: Record<string, unknown>) =>
+    createElement('a', { href, ...props }, children as React.ReactNode),
+}));
+
 function renderFilterBar(
-  props: Partial<React.ComponentProps<typeof FilterBar>> = {},
+  active: FilterValue = 'all',
   locale: 'en' | 'he' = 'en',
 ) {
-  const onChange = vi.fn();
-  const messages = locale === 'en' ? en : he;
   render(
-    <NextIntlClientProvider locale={locale} messages={messages}>
-      <FilterBar active="all" onChange={onChange} {...props} />
+    <NextIntlClientProvider
+      locale={locale}
+      messages={locale === 'en' ? en : he}
+    >
+      <FilterBar active={active} />
     </NextIntlClientProvider>,
   );
-  return { onChange };
 }
 
 describe('FilterBar', () => {
-  it('renders All plus the three category labels in English', () => {
+  it('renders the categories and Contact as links, but no All tab', () => {
     renderFilterBar();
-    expect(screen.getByRole('button', { name: 'All' })).toBeInTheDocument();
-    expect(
-      screen.getByRole('button', { name: 'Pure Paintings' }),
-    ).toBeInTheDocument();
-    expect(
-      screen.getByRole('button', { name: 'Pictures from Galleries' }),
-    ).toBeInTheDocument();
-    expect(
-      screen.getByRole('button', { name: '3D Arts, Sculptures etc.' }),
-    ).toBeInTheDocument();
+    for (const name of [
+      'Pure Paintings',
+      'Pictures from Galleries',
+      '3D Arts, Sculptures etc.',
+      'Contact',
+    ]) {
+      expect(screen.getAllByRole('link', { name }).length).toBeGreaterThan(0);
+    }
+    expect(screen.queryByRole('link', { name: 'All' })).not.toBeInTheDocument();
   });
 
-  it('renders Hebrew labels under the he locale', () => {
-    renderFilterBar({}, 'he');
-    expect(screen.getByRole('button', { name: 'הכול' })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'ציורים' })).toBeInTheDocument();
-  });
-
-  it('marks only the active filter as pressed', () => {
-    renderFilterBar({ active: 'paintings' });
+  it('links each tab to its path, and the logo home', () => {
+    renderFilterBar();
+    expect(screen.getAllByRole('link', { name: 'Home' })[0]).toHaveAttribute(
+      'href',
+      '/',
+    );
     expect(
-      screen.getByRole('button', { name: 'Pure Paintings' }),
-    ).toHaveAttribute('aria-pressed', 'true');
-    expect(screen.getByRole('button', { name: 'All' })).toHaveAttribute(
-      'aria-pressed',
-      'false',
+      screen.getAllByRole('link', { name: 'Pure Paintings' })[0],
+    ).toHaveAttribute('href', '/paintings');
+    expect(screen.getAllByRole('link', { name: 'Contact' })[0]).toHaveAttribute(
+      'href',
+      '/contact',
     );
   });
 
-  it('calls onChange with the clicked category value', async () => {
-    const user = userEvent.setup();
-    const { onChange } = renderFilterBar();
-    await user.click(screen.getByRole('button', { name: 'Pure Paintings' }));
-    expect(onChange).toHaveBeenCalledExactlyOnceWith('paintings');
+  it('renders Hebrew category labels under the he locale', () => {
+    renderFilterBar('all', 'he');
+    expect(
+      screen.getAllByRole('link', { name: 'ציורים' }).length,
+    ).toBeGreaterThan(0);
+    expect(
+      screen.getAllByRole('link', { name: 'צור קשר' }).length,
+    ).toBeGreaterThan(0);
   });
 
-  it('renders a Contact tab and reports it on click', async () => {
-    const user = userEvent.setup();
-    const { onChange } = renderFilterBar();
-    await user.click(screen.getByRole('button', { name: 'Contact' }));
-    expect(onChange).toHaveBeenCalledExactlyOnceWith('contact');
-  });
-
-  it('still fires onChange when the already-active filter is clicked', async () => {
-    const user = userEvent.setup();
-    const { onChange } = renderFilterBar({ active: 'all' });
-    await user.click(screen.getByRole('button', { name: 'All' }));
-    expect(onChange).toHaveBeenCalledExactlyOnceWith('all');
+  it('marks only the active tab with aria-current', () => {
+    renderFilterBar('paintings');
+    expect(
+      screen.getAllByRole('link', { name: 'Pure Paintings' })[0],
+    ).toHaveAttribute('aria-current', 'page');
+    expect(
+      screen.getAllByRole('link', { name: 'Pictures from Galleries' })[0],
+    ).not.toHaveAttribute('aria-current');
   });
 });

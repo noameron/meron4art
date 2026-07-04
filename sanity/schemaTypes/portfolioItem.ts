@@ -64,11 +64,6 @@ export const portfolioItem = defineType({
       type: 'localizedString',
     }),
     defineField({
-      name: 'title',
-      title: 'Artwork Title',
-      type: 'localizedString',
-    }),
-    defineField({
       name: 'displayOrder',
       title: 'Display Order',
       type: 'number',
@@ -78,8 +73,7 @@ export const portfolioItem = defineType({
   ],
   preview: {
     select: {
-      title: 'title.en',
-      subtitle: 'artistName.en',
+      title: 'artistName.en',
       media: 'image',
     },
   },
