@@ -1,0 +1,9 @@
+#!/bin/sh
+# hard guard: never push a commit carrying a work identity from this repo
+if git log --branches --not --remotes --format='%ae %ce' | grep -qi 'weka\.io'; then
+  echo 'push blocked: an unpushed commit is authored/committed with a @weka.io email.' >&2
+  echo 'fix with: git commit --amend --reset-author --no-edit (or git rebase -i for older ones)' >&2
+  exit 1
+fi
+# ponytail: lint/format checks temporarily disabled for faster pushes — re-enable by uncommenting
+# npm run lint && npm run format:check

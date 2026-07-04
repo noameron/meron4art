@@ -1,0 +1,20 @@
+{
+  "Hero": {
+    "name": "Photographer Name",
+    "bio": "Fine-art reproduction photography for artists and galleries. Gallery-grade digitization of paintings, sculptures, and installations."
+  },
+  "Filters": {
+    "all": "All",
+    "paintings": "Pure Paintings",
+    "gallery-pictures": "Pictures from Galleries",
+    "3d-sculpture": "3D Arts, Sculptures etc.",
+    "contact": "Contact"
+  },
+  "Gallery": {
+    "empty": "No pieces in this category yet."
+  },
+  "Contact": {
+    "email": "Email",
+    "phone": "Phone"
+  }
+}
