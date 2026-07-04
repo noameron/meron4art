@@ -11,7 +11,6 @@ export interface PortfolioItem {
   _id: string;
   category: Category;
   artistName?: LocalizedString;
-  title?: LocalizedString;
   image: SanityImageSource;
   // intrinsic pixel dimensions, used to render each image at its true
   // aspect ratio (uncropped) within a fixed column width

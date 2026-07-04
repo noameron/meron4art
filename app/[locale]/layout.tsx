@@ -2,21 +2,17 @@ import type { Metadata } from 'next';
 import { NextIntlClientProvider, hasLocale } from 'next-intl';
 import { setRequestLocale } from 'next-intl/server';
 import { notFound } from 'next/navigation';
-import { Frank_Ruhl_Libre, Assistant } from 'next/font/google';
+import { Rubik } from 'next/font/google';
 import { routing } from '@/i18n/routing';
 import LocaleSwitcher from '@/components/LocaleSwitcher';
 import '../globals.css';
 
-const displayFont = Frank_Ruhl_Libre({
-  variable: '--font-display',
+// Rubik across the whole site: light / regular / medium / bold / black.
+// Bound to both display and body vars so headings and text share it.
+const rubik = Rubik({
+  variable: '--font-rubik',
   subsets: ['latin', 'hebrew'],
-  weight: ['400', '500', '600'],
-});
-
-const bodyFont = Assistant({
-  variable: '--font-body',
-  subsets: ['latin', 'hebrew'],
-  weight: ['300', '400', '500', '600'],
+  weight: ['300', '400', '500', '700', '900'],
 });
 
 export const metadata: Metadata = {
@@ -51,7 +47,7 @@ export default async function LocaleLayout({
     <html
       lang={locale}
       dir={dir}
-      className={`${displayFont.variable} ${bodyFont.variable}`}
+      className={rubik.variable}
     >
       <body className="min-h-screen bg-white font-body text-neutral-900 antialiased">
         <NextIntlClientProvider>

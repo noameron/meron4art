@@ -37,13 +37,12 @@ const items: PortfolioItem[] = [
   item({
     _id: 'p1',
     category: 'paintings',
-    title: { en: 'Sunset', he: 'שקיעה' },
     artistName: { en: 'Dana', he: 'דנה' },
   }),
   item({
     _id: 'p2',
     category: 'paintings',
-    title: { en: 'Dawn', he: 'זריחה' },
+    artistName: { en: 'Roi', he: 'רועי' },
   }),
   item({
     _id: 'g1',
@@ -64,22 +63,18 @@ function renderGrid(
 }
 
 describe('GalleryGrid', () => {
-  it('shows every item under the default All filter', () => {
+  it('shows no gallery on the home (all) view — hero only', () => {
     renderGrid('all');
-    expect(screen.getAllByRole('figure')).toHaveLength(3);
+    expect(screen.queryAllByRole('figure')).toHaveLength(0);
+    expect(
+      screen.queryByText('No pieces in this category yet.'),
+    ).not.toBeInTheDocument();
   });
 
   it('filters down to the active category', () => {
     renderGrid('paintings');
     expect(screen.getAllByRole('figure')).toHaveLength(2);
     expect(screen.queryByText('Yoav')).not.toBeInTheDocument();
-  });
-
-  it('shows a category headline for a non-all tab', () => {
-    renderGrid('paintings');
-    expect(
-      screen.getByRole('heading', { name: 'Pure Paintings' }),
-    ).toBeInTheDocument();
   });
 
   it('shows the empty state when the active category has no items', () => {
@@ -90,20 +85,10 @@ describe('GalleryGrid', () => {
     ).toBeInTheDocument();
   });
 
-  it('renders the empty state immediately for an empty items array', () => {
-    renderGrid('all', []);
-    expect(screen.queryAllByRole('figure')).toHaveLength(0);
-    expect(
-      screen.getByText('No pieces in this category yet.'),
-    ).toBeInTheDocument();
-  });
-
-  it('renders captions with title only, artist only, or both', () => {
-    renderGrid('all');
-    expect(screen.getByText('Sunset')).toBeInTheDocument();
+  it('renders the artist name under each image', () => {
+    renderGrid('paintings');
     expect(screen.getByText('Dana')).toBeInTheDocument();
-    expect(screen.getByText('Dawn')).toBeInTheDocument();
-    expect(screen.getByText('Yoav')).toBeInTheDocument();
+    expect(screen.getByText('Roi')).toBeInTheDocument();
   });
 
   it('shows contact details instead of the gallery on the Contact tab', () => {
@@ -122,8 +107,8 @@ describe('GalleryGrid', () => {
     expect(screen.queryAllByRole('figure')).toHaveLength(0);
   });
 
-  it('omits the caption entirely when an item has neither title nor artist', () => {
-    renderGrid('all', [item({ _id: 'bare', category: 'paintings' })]);
+  it('omits the caption entirely when an item has no artist name', () => {
+    renderGrid('paintings', [item({ _id: 'bare', category: 'paintings' })]);
     const figure = screen.getByRole('figure');
     expect(figure.querySelector('figcaption')).toBeNull();
   });
