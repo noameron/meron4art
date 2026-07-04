@@ -1,7 +1,7 @@
 name: CI
 
-# temporarily manual-only; restore `pull_request:` to re-enable per-PR runs
 on:
+  pull_request:
   workflow_dispatch:
 
 jobs:
@@ -14,18 +14,35 @@ jobs:
       NEXT_PUBLIC_SANITY_DATASET: production
       NEXT_PUBLIC_SANITY_API_VERSION: 2025-01-01
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node 22
+        uses: actions/setup-node@v4
         with:
           node-version: 22
           cache: npm
-      - run: npm ci
-      - run: npm run lint
-      - run: npm run format:check
-      - run: npm run test
-      - run: npx playwright install --with-deps chromium
-      - run: npm run test:e2e
-      - uses: actions/upload-artifact@v4
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint (eslint)
+        run: npm run lint
+
+      - name: Format check (prettier)
+        run: npm run format:check
+
+      - name: Unit tests (vitest)
+        run: npm run test
+
+      - name: Install Playwright browser
+        run: npx playwright install --with-deps chromium
+
+      - name: E2E tests (playwright)
+        run: npm run test:e2e
+
+      - name: Upload e2e failure artifacts
+        uses: actions/upload-artifact@v4
         if: failure()
         with:
           name: playwright-results

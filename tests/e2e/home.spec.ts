@@ -105,6 +105,22 @@ test.describe('home page', () => {
     ).toBeVisible();
   });
 
+  test('mobile shows a hamburger that opens the menu and selects a tab', async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.goto('/en');
+
+    // options are collapsed behind the hamburger on mobile
+    await expect(
+      page.getByRole('button', { name: 'All', exact: true }),
+    ).toBeHidden();
+
+    await page.getByRole('button', { name: 'Menu' }).click();
+    await page.getByRole('button', { name: 'Contact' }).click();
+    await expect(page.getByText('Omri Meron')).toBeVisible();
+  });
+
   test('tab bar stays pinned to the top while scrolling', async ({ page }) => {
     await page.goto('/en');
     await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
@@ -142,5 +158,12 @@ test.describe('home page', () => {
     const phone = page.getByRole('link', { name: 'Phone' });
     await expect(phone).toBeVisible();
     expect(await phone.getAttribute('href')).toMatch(/^tel:\+?\d+$/);
+
+    // message form is present with its required fields
+    await expect(page.getByLabel('Name')).toBeVisible();
+    await expect(page.getByLabel('Message')).toBeVisible();
+    await expect(
+      page.getByRole('button', { name: 'Send Message' }),
+    ).toBeVisible();
   });
 });

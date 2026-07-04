@@ -14,7 +14,9 @@ export default function LocaleSwitcher() {
   const router = useRouter();
 
   return (
-    <div className="fixed top-4 end-4 z-50 flex gap-1 rounded-full border border-neutral-200 bg-white/90 p-1 shadow-sm backdrop-blur-sm">
+    // physical right-4 (not end-4): the toggle must stay in the same corner
+    // in both languages, and top-20 keeps it clear of the sticky tab bar
+    <div className="fixed top-20 right-4 z-50 flex gap-1 rounded-full border border-neutral-200 bg-white/90 p-1 shadow-sm backdrop-blur-sm">
       {LOCALES.map(({ code, flag, name }) => (
         <button
           key={code}
