@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Image from 'next/image';
 import { useLocale, useTranslations } from 'next-intl';
 import { urlFor } from '@/sanity/lib/image';
@@ -26,10 +26,10 @@ export default function GalleryGrid({
   intro?: React.ReactNode;
   banner?: React.ReactNode;
 }) {
-  const [lightbox, setLightbox] = useState<string | null>(null);
+  // index of the image open in the lightbox (null = closed)
+  const [lightbox, setLightbox] = useState<number | null>(null);
   const locale = useLocale() as 'en' | 'he';
   const t = useTranslations('Gallery');
-  const tFilters = useTranslations('Filters');
   const tContact = useTranslations('Contact');
 
   const contentRef = useRef<HTMLDivElement>(null);
@@ -45,15 +45,6 @@ export default function GalleryGrid({
     }
   }, [active]);
 
-  // Esc closes the lightbox (native <dialog> would give this free, but we
-  // need a plain overlay to click-anywhere-to-close)
-  useEffect(() => {
-    if (!lightbox) return;
-    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && setLightbox(null);
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
-  }, [lightbox]);
-
   const filtered = useMemo(
     () =>
       active === 'all' || active === 'contact'
@@ -61,6 +52,27 @@ export default function GalleryGrid({
         : items.filter((item) => item.category === active),
     [items, active],
   );
+
+  // step through the lightbox, wrapping around the ends
+  const step = useCallback(
+    (delta: number) =>
+      setLightbox((i) =>
+        i === null ? i : (i + delta + filtered.length) % filtered.length,
+      ),
+    [filtered.length],
+  );
+
+  // arrow keys navigate, Esc closes (a plain overlay, not native <dialog>)
+  useEffect(() => {
+    if (lightbox === null) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setLightbox(null);
+      else if (e.key === 'ArrowRight') step(1);
+      else if (e.key === 'ArrowLeft') step(-1);
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [lightbox, step]);
 
   return (
     <section>
@@ -71,14 +83,16 @@ export default function GalleryGrid({
       <div className="sticky top-[4.5rem] z-0">{intro}</div>
       <div className="relative z-10 bg-white">
         {banner}
+        {/* modest blank gap that separates the hero from the content below */}
+        {active !== 'all' && <div aria-hidden className="h-[25vh]" />}
         <div ref={contentRef} className="scroll-mt-[4.5rem]">
-          {active === 'contact' ? (
+          {active === 'all' ? null : active === 'contact' ? (
             <div className="mx-auto flex max-w-3xl flex-col justify-center gap-10 px-6 py-16 sm:flex-row sm:gap-16">
               <div className="flex flex-col gap-2">
-                <h2 className="text-sm font-medium tracking-widest text-neutral-400 uppercase">
+                <h2 className="text-sm font-bold tracking-widest text-neutral-400 uppercase">
                   {tContact('details')}
                 </h2>
-                <span className="text-lg font-medium text-neutral-900">
+                <span className="text-lg font-bold text-neutral-900">
                   {CONTACT.name}
                 </span>
                 <a
@@ -102,51 +116,36 @@ export default function GalleryGrid({
             </div>
           ) : (
             <>
-              {active !== 'all' && (
-                <h2 className="px-6 pt-12 pb-6 text-center text-2xl font-medium tracking-tight text-neutral-900 sm:text-4xl">
-                  {tFilters(active)}
-                </h2>
-              )}
-              <div className="mx-auto grid max-w-5xl grid-cols-1 gap-10 px-6 pb-16 sm:grid-cols-2 sm:gap-14 sm:px-12">
-                {filtered.map((item) => {
-                  const label =
-                    item.title?.[locale] ?? item.artistName?.[locale];
+              {/* fixed 2-column grid; each image is contained (max size,
+                  never cropped) inside its square cell */}
+              <div className="mx-auto grid max-w-5xl grid-cols-2 gap-6 px-6 pt-8 pb-16 sm:gap-12 sm:px-12">
+                {filtered.map((item, i) => {
+                  const label = item.artistName?.[locale];
                   return (
                     <figure key={item._id} className="flex flex-col">
                       <button
                         type="button"
                         aria-label={label ?? t('view')}
-                        onClick={() =>
-                          setLightbox(
-                            urlFor(item.image).width(2000).auto('format').url(),
-                          )
-                        }
-                        className="block cursor-zoom-in border border-neutral-200 bg-white p-2 shadow-sm transition-shadow hover:shadow-md"
+                        onClick={() => setLightbox(i)}
+                        className="block w-full cursor-zoom-in border border-neutral-200 bg-white p-1.5 shadow-sm transition-shadow hover:shadow-md"
                       >
+                        {/* thin uniform white line (p-1.5) around the image;
+                            height follows the image's own aspect ratio */}
                         <Image
                           src={urlFor(item.image)
-                            .width(1200)
+                            .width(1000)
                             .auto('format')
                             .url()}
                           alt={label ?? ''}
                           width={item.imgWidth ?? 1200}
                           height={item.imgHeight ?? 900}
-                          sizes="(min-width: 640px) 45vw, 90vw"
+                          sizes="(min-width: 640px) 40vw, 45vw"
                           className="h-auto w-full"
                         />
                       </button>
-                      {(item.title || item.artistName) && (
-                        <figcaption className="mt-3 flex flex-col gap-0.5 text-center">
-                          {item.title && (
-                            <span className="text-sm font-medium text-neutral-900">
-                              {item.title[locale]}
-                            </span>
-                          )}
-                          {item.artistName && (
-                            <span className="text-xs text-neutral-500">
-                              {item.artistName[locale]}
-                            </span>
-                          )}
+                      {item.artistName && (
+                        <figcaption className="mt-3 text-center text-sm font-medium text-neutral-900">
+                          {item.artistName[locale]}
                         </figcaption>
                       )}
                     </figure>
@@ -162,19 +161,40 @@ export default function GalleryGrid({
           )}
         </div>
       </div>
-      {lightbox && (
+      {lightbox !== null && filtered[lightbox] && (
         <div
           role="dialog"
           aria-modal="true"
           onClick={() => setLightbox(null)}
           className="fixed inset-0 z-50 flex cursor-zoom-out items-center justify-center bg-black/90 p-4"
         >
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src={lightbox}
-            alt=""
-            className="max-h-full max-w-full object-contain"
-          />
+          <div
+            className="relative flex max-h-full max-w-full"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={urlFor(filtered[lightbox].image)
+                .width(2000)
+                .auto('format')
+                .url()}
+              alt={filtered[lightbox].artistName?.[locale] ?? ''}
+              className="max-h-[90vh] max-w-full object-contain"
+            />
+            {/* left/right halves step through the images */}
+            <button
+              type="button"
+              aria-label={t('previous')}
+              onClick={() => step(-1)}
+              className="absolute inset-y-0 left-0 w-1/2 cursor-w-resize"
+            />
+            <button
+              type="button"
+              aria-label={t('next')}
+              onClick={() => step(1)}
+              className="absolute inset-y-0 right-0 w-1/2 cursor-e-resize"
+            />
+          </div>
         </div>
       )}
     </section>

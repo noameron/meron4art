@@ -8,8 +8,8 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-display: var(--font-display);
-  --font-body: var(--font-body);
+  --font-display: var(--font-rubik);
+  --font-body: var(--font-rubik);
 }
 
 body {

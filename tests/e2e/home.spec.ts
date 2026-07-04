@@ -32,9 +32,7 @@ test.describe('home page', () => {
     await expect(page.locator('html')).toHaveAttribute('lang', 'he');
   });
 
-  test('hero, filter bar, and gallery (or empty state) render without errors', async ({
-    page,
-  }) => {
+  test('home shows hero and filter bar but no gallery', async ({ page }) => {
     const errors = collectPageErrors(page);
     await page.goto('/en');
 
@@ -45,11 +43,8 @@ test.describe('home page', () => {
       ).toBeVisible();
     }
 
-    // Tolerate an empty dataset: either at least one artwork figure or the
-    // empty-state message must be present, never neither.
-    const figures = page.locator('figure');
-    const emptyState = page.getByText('No pieces in this category yet.');
-    await expect(figures.first().or(emptyState)).toBeVisible();
+    // home is hero-only: no artwork grid below the fold
+    await expect(page.locator('figure')).toHaveCount(0);
 
     expect(errors).toEqual([]);
   });
@@ -64,10 +59,6 @@ test.describe('home page', () => {
     await expect(
       page.getByRole('link', { name: 'Pure Paintings' }),
     ).toHaveAttribute('aria-current', 'page');
-    // category headline is shown
-    await expect(
-      page.getByRole('heading', { name: 'Pure Paintings' }),
-    ).toBeVisible();
 
     // logo returns to the full landing view
     await page.getByRole('link', { name: 'Home' }).first().click();
@@ -83,6 +74,26 @@ test.describe('home page', () => {
       const emptyState = page.getByText('No pieces in this category yet.');
       await expect(figures.first().or(emptyState)).toBeVisible();
     }
+  });
+
+  test('lightbox opens and navigates with keys when a category has 2+ images', async ({
+    page,
+  }) => {
+    await page.goto('/en/paintings');
+    const figures = page.locator('figure');
+    // needs at least two published paintings to exercise navigation
+    test.skip((await figures.count()) < 2, 'not enough images in dataset');
+
+    await figures.first().getByRole('button').first().click();
+    const dialog = page.getByRole('dialog');
+    await expect(dialog).toBeVisible();
+
+    const firstSrc = await dialog.locator('img').getAttribute('src');
+    await page.keyboard.press('ArrowRight');
+    await expect(dialog.locator('img')).not.toHaveAttribute('src', firstSrc!);
+
+    await page.keyboard.press('Escape');
+    await expect(dialog).toBeHidden();
   });
 
   test('locale switcher flips language and direction both ways', async ({

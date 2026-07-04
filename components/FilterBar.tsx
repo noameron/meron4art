@@ -37,8 +37,8 @@ export default function FilterBar({ active }: { active: FilterValue }) {
         aria-current={isActive ? 'page' : undefined}
         className={`text-sm tracking-wide uppercase transition-colors ${
           isActive
-            ? 'text-neutral-900'
-            : 'text-neutral-400 hover:text-neutral-700'
+            ? 'font-bold text-neutral-900'
+            : 'font-normal text-neutral-400 hover:text-neutral-700'
         }`}
       >
         {t(option)}

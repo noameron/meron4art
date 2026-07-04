@@ -12,7 +12,9 @@
   },
   "Gallery": {
     "empty": "No pieces in this category yet.",
-    "view": "View full size"
+    "view": "View full size",
+    "previous": "Previous image",
+    "next": "Next image"
   },
   "Contact": {
     "details": "Details",
