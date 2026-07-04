@@ -5,12 +5,13 @@ import Image from 'next/image';
 import { useLocale, useTranslations } from 'next-intl';
 import { urlFor } from '@/sanity/lib/image';
 import type { PortfolioItem } from '@/sanity/lib/types';
-import FilterBar, { FILTER_VALUES, Logo, type FilterValue } from './FilterBar';
+import FilterBar, { FILTER_VALUES, type FilterValue } from './FilterBar';
+import ContactForm from './ContactForm';
 
 const CONTACT = {
   name: 'Omri Meron',
   email: 'meronok@gmail.com',
-  phone: '054-2999663',
+  phone: '+972-54-299-9663',
   tel: '+972542999663',
 };
 
@@ -77,25 +78,32 @@ export default function GalleryGrid({
         {banner}
         <div ref={contentRef} className="scroll-mt-[4.5rem]">
           {active === 'contact' ? (
-            <div className="flex flex-col gap-2 px-6 py-16 sm:px-12">
-              <span className="flex items-center gap-2 text-lg font-medium text-neutral-900">
-                <Logo className="h-7 w-auto" />
-                {CONTACT.name}
-              </span>
-              <a
-                href={`mailto:${CONTACT.email}`}
-                aria-label={tContact('email')}
-                className="text-neutral-600 transition-colors hover:text-neutral-900"
-              >
-                {CONTACT.email}
-              </a>
-              <a
-                href={`tel:${CONTACT.tel}`}
-                aria-label={tContact('phone')}
-                className="text-neutral-600 transition-colors hover:text-neutral-900"
-              >
-                {CONTACT.phone}
-              </a>
+            <div className="mx-auto flex max-w-3xl flex-col justify-center gap-10 px-6 py-16 sm:flex-row sm:gap-16">
+              <div className="flex flex-col gap-2">
+                <h2 className="text-sm font-medium tracking-widest text-neutral-400 uppercase">
+                  {tContact('details')}
+                </h2>
+                <span className="text-lg font-medium text-neutral-900">
+                  {CONTACT.name}
+                </span>
+                <a
+                  href={`mailto:${CONTACT.email}`}
+                  aria-label={tContact('email')}
+                  className="text-neutral-600 transition-colors hover:text-neutral-900"
+                >
+                  {CONTACT.email}
+                </a>
+                <a
+                  href={`tel:${CONTACT.tel}`}
+                  aria-label={tContact('phone')}
+                  className="text-neutral-600 transition-colors hover:text-neutral-900"
+                >
+                  {CONTACT.phone}
+                </a>
+              </div>
+              <div className="flex-1">
+                <ContactForm to={CONTACT.email} />
+              </div>
             </div>
           ) : (
             <>

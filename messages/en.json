@@ -14,7 +14,11 @@
     "empty": "No pieces in this category yet."
   },
   "Contact": {
+    "details": "Details",
     "email": "Email",
-    "phone": "Phone"
+    "phone": "Phone",
+    "name": "Name",
+    "message": "Message",
+    "send": "Send Message"
   }
 }
