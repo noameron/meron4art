@@ -35,14 +35,18 @@ export default function GalleryGrid({
   const contentRef = useRef<HTMLDivElement>(null);
 
   // the tab content sits below the hero banner, so bring it into view when
-  // landing on any tab other than the default "all"
+  // landing on a category/contact tab — but NOT when the remount was just a
+  // language switch (that must preserve the reader's scroll position)
   useEffect(() => {
-    if (active !== 'all') {
-      contentRef.current?.scrollIntoView?.({
-        behavior: 'smooth',
-        block: 'start',
-      });
+    if (active === 'all') return;
+    if (sessionStorage.getItem('localeSwitch')) {
+      sessionStorage.removeItem('localeSwitch');
+      return;
     }
+    contentRef.current?.scrollIntoView?.({
+      behavior: 'smooth',
+      block: 'start',
+    });
   }, [active]);
 
   const filtered = useMemo(
@@ -116,31 +120,37 @@ export default function GalleryGrid({
             </div>
           ) : (
             <>
-              {/* fixed 2-column grid; each image is contained (max size,
-                  never cropped) inside its square cell */}
-              <div className="mx-auto grid max-w-5xl grid-cols-2 gap-6 px-6 pt-8 pb-16 sm:gap-12 sm:px-12">
+              {/* single centered column; each image is a fixed height and its
+                  width follows its aspect ratio, so narrow images leave more
+                  blank space at the sides. max-w-full keeps side margins. */}
+              <div className="mx-auto flex max-w-4xl flex-col items-center gap-12 px-6 pt-8 pb-16 sm:px-12">
                 {filtered.map((item, i) => {
                   const label = item.artistName?.[locale];
                   return (
-                    <figure key={item._id} className="flex flex-col">
+                    <figure
+                      key={item._id}
+                      className="flex flex-col items-center"
+                    >
                       <button
                         type="button"
                         aria-label={label ?? t('view')}
                         onClick={() => setLightbox(i)}
-                        className="block w-full cursor-zoom-in border border-neutral-200 bg-white p-1.5 shadow-sm transition-shadow hover:shadow-md"
+                        className="inline-block max-w-full cursor-zoom-in border border-neutral-200 bg-white p-1.5 shadow-sm transition-shadow hover:shadow-md"
                       >
-                        {/* thin uniform white line (p-1.5) around the image;
-                            height follows the image's own aspect ratio */}
+                        {/* thin uniform white line (p-1.5) that hugs the
+                            image exactly: capped by max-height (and container
+                            width), aspect ratio preserved, no letterboxing so
+                            the frame is the same width on every image */}
                         <Image
                           src={urlFor(item.image)
-                            .width(1000)
+                            .height(1200)
                             .auto('format')
                             .url()}
                           alt={label ?? ''}
                           width={item.imgWidth ?? 1200}
                           height={item.imgHeight ?? 900}
-                          sizes="(min-width: 640px) 40vw, 45vw"
-                          className="h-auto w-full"
+                          sizes="90vw"
+                          className="h-auto max-h-80 w-auto max-w-full sm:max-h-128"
                         />
                       </button>
                       {item.artistName && (

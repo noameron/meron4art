@@ -23,11 +23,14 @@ export default function LocaleSwitcher() {
           type="button"
           aria-label={name}
           aria-pressed={locale === code}
-          onClick={() =>
+          onClick={() => {
+            // flag so the gallery skips its scroll-to-content on the remount,
+            // and scroll:false keeps the reader exactly where they were
+            sessionStorage.setItem('localeSwitch', '1');
             // pathname is locale-stripped, so this keeps the active tab
             // (e.g. /paintings) and just swaps the locale prefix
-            router.replace(pathname, { locale: code })
-          }
+            router.replace(pathname, { locale: code, scroll: false });
+          }}
           className={`rounded-full px-2.5 py-1.5 text-sm transition-colors ${
             locale === code ? 'bg-neutral-900' : 'opacity-50 hover:opacity-100'
           }`}
