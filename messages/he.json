@@ -6,8 +6,8 @@
   "Filters": {
     "all": "הכול",
     "paintings": "ציורים",
-    "gallery-pictures": "תמונות מגלריות",
-    "3d-sculpture": "אמנות תלת-ממדית, פסלים ועוד",
+    "3d-sculpture": "פסלים ועוד",
+    "gallery-pictures": "תערוכות",
     "contact": "צור קשר"
   },
   "Gallery": {

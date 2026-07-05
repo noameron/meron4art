@@ -8,11 +8,38 @@ import type { FilterValue, PortfolioItem } from '@/sanity/lib/types';
 import FilterBar from './FilterBar';
 import ContactForm from './ContactForm';
 
+// Render free text, turning any URLs into clickable links that look like
+// plain text (same color, no underline). Split keeps the matched URLs as
+// their own array slots; each is tested with a fresh non-global regex.
+const URL_RE = /(https?:\/\/[^\s]+|www\.[^\s]+)/g;
+const isUrl = (s: string) => /^(https?:\/\/|www\.)/.test(s);
+function LinkifiedText({ text }: { text: string }) {
+  return (
+    <>
+      {text.split(URL_RE).map((part, i) =>
+        isUrl(part) ? (
+          <a
+            key={i}
+            href={part.startsWith('http') ? part : `https://${part}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-inherit no-underline"
+          >
+            {part}
+          </a>
+        ) : (
+          part
+        ),
+      )}
+    </>
+  );
+}
+
 const CONTACT = {
-  name: 'Omri Meron',
+  name: { en: 'Omri Meron', he: 'עמרי מירון' },
   email: 'meronok@gmail.com',
-  phone: '+972-54-299-9663',
-  tel: '+972542999663',
+  phone: '972-54-299-9663',
+  tel: '+972542999663', // keep + so the tel: link dials internationally
 };
 
 export default function GalleryGrid({
@@ -97,7 +124,7 @@ export default function GalleryGrid({
                   {tContact('details')}
                 </h2>
                 <span className="text-lg font-bold text-neutral-900">
-                  {CONTACT.name}
+                  {CONTACT.name[locale]}
                 </span>
                 <a
                   href={`mailto:${CONTACT.email}`}
@@ -157,6 +184,11 @@ export default function GalleryGrid({
                         <figcaption className="mt-3 text-center text-sm font-medium text-neutral-900">
                           {item.artistName[locale]}
                         </figcaption>
+                      )}
+                      {item.extraInfo && (
+                        <p className="mt-1 text-center text-sm text-neutral-600">
+                          <LinkifiedText text={item.extraInfo} />
+                        </p>
                       )}
                     </figure>
                   );

@@ -11,6 +11,7 @@ export interface PortfolioItem {
   _id: string;
   category: Category;
   artistName?: LocalizedString;
+  extraInfo?: string;
   image: SanityImageSource;
   // intrinsic pixel dimensions, used to render each image at its true
   // aspect ratio (uncropped) within a fixed column width
@@ -20,8 +21,8 @@ export interface PortfolioItem {
 
 export const CATEGORY_VALUES: Category[] = [
   'paintings',
-  'gallery-pictures',
   '3d-sculpture',
+  'gallery-pictures',
 ];
 
 export type FilterValue = Category | 'all' | 'contact';
