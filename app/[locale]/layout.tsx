@@ -5,6 +5,7 @@ import { notFound } from 'next/navigation';
 import { Rubik } from 'next/font/google';
 import { routing } from '@/i18n/routing';
 import LocaleSwitcher from '@/components/LocaleSwitcher';
+import { Footer } from '@/components/Footer';
 import '../globals.css';
 
 // Rubik across the whole site: light / regular / medium / bold / black.
@@ -53,6 +54,7 @@ export default async function LocaleLayout({
         <NextIntlClientProvider>
           <LocaleSwitcher />
           {children}
+          <Footer locale={locale as 'en' | 'he'} />
         </NextIntlClientProvider>
       </body>
     </html>

@@ -64,13 +64,6 @@ export const portfolioItem = defineType({
       type: 'localizedString',
     }),
     defineField({
-      name: 'extraInfo',
-      title: 'Extra Information',
-      type: 'string',
-      description:
-        "Free text (e.g. the artist's website). Any URL shown here becomes clickable but renders as plain text.",
-    }),
-    defineField({
       name: 'displayOrder',
       title: 'Display Order',
       type: 'number',
