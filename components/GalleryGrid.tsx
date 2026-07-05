@@ -7,40 +7,64 @@ import { urlFor } from '@/sanity/lib/image';
 import type { FilterValue, PortfolioItem } from '@/sanity/lib/types';
 import FilterBar from './FilterBar';
 import ContactForm from './ContactForm';
+import { CONTACT } from './contactInfo';
 
-// Render free text, turning any URLs into clickable links that look like
-// plain text (same color, no underline). Split keeps the matched URLs as
-// their own array slots; each is tested with a fresh non-global regex.
-const URL_RE = /(https?:\/\/[^\s]+|www\.[^\s]+)/g;
-const isUrl = (s: string) => /^(https?:\/\/|www\.)/.test(s);
-function LinkifiedText({ text }: { text: string }) {
+// Lightbox toolbar icons — thin line icons drawn in currentColor.
+const iconProps = {
+  width: 22,
+  height: 22,
+  viewBox: '0 0 24 24',
+  fill: 'none',
+  stroke: 'currentColor',
+  strokeWidth: 1.5,
+  strokeLinecap: 'round' as const,
+  strokeLinejoin: 'round' as const,
+  'aria-hidden': true,
+};
+const ZoomIcon = () => (
+  <svg {...iconProps}>
+    <circle cx="11" cy="11" r="7" />
+    <path d="M21 21l-4.3-4.3M11 8v6M8 11h6" />
+  </svg>
+);
+const FullscreenIcon = () => (
+  <svg {...iconProps}>
+    <path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5" />
+  </svg>
+);
+const ShareIcon = () => (
+  <svg {...iconProps}>
+    <path d="M4 12v7a1 1 0 001 1h14a1 1 0 001-1v-7M16 6l-4-4-4 4M12 2v13" />
+  </svg>
+);
+const CloseIcon = () => (
+  <svg {...iconProps}>
+    <path d="M6 6l12 12M18 6L6 18" />
+  </svg>
+);
+const ArrowIcon = ({ dir }: { dir: 'left' | 'right' }) => (
+  <svg {...iconProps} width={28} height={28}>
+    {dir === 'left' ? (
+      <path d="M15 5l-7 7 7 7" />
+    ) : (
+      <path d="M9 5l7 7-7 7" />
+    )}
+  </svg>
+);
+
+// Artist name caption, shared by the grid hover overlay and the lightbox.
+function Caption({
+  item,
+  locale,
+}: {
+  item: PortfolioItem;
+  locale: 'en' | 'he';
+}) {
+  if (!item.artistName) return null;
   return (
-    <>
-      {text.split(URL_RE).map((part, i) =>
-        isUrl(part) ? (
-          <a
-            key={i}
-            href={part.startsWith('http') ? part : `https://${part}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-inherit no-underline"
-          >
-            {part}
-          </a>
-        ) : (
-          part
-        ),
-      )}
-    </>
+    <span className="block text-sm font-medium">{item.artistName[locale]}</span>
   );
 }
-
-const CONTACT = {
-  name: { en: 'Omri Meron', he: 'עמרי מירון' },
-  email: 'meronok@gmail.com',
-  phone: '972-54-299-9663',
-  tel: '+972542999663', // keep + so the tel: link dials internationally
-};
 
 export default function GalleryGrid({
   items,
@@ -55,6 +79,32 @@ export default function GalleryGrid({
 }) {
   // index of the image open in the lightbox (null = closed)
   const [lightbox, setLightbox] = useState<number | null>(null);
+  const [zoomed, setZoomed] = useState(false);
+  const lightboxRef = useRef<HTMLDivElement>(null);
+  // pan container/image + transient pan state, kept in refs and applied via
+  // GPU transform imperatively so dragging never triggers a React re-render
+  const panRef = useRef<HTMLDivElement>(null);
+  const imgRef = useRef<HTMLImageElement>(null);
+  const pan = useRef({ x: 0, y: 0 });
+  const drag = useRef({ active: false, moved: false, x: 0, y: 0, px: 0, py: 0 });
+
+  // move the image to (x,y), clamped so it can't be dragged past its edges
+  const applyPan = useCallback((x: number, y: number) => {
+    const el = panRef.current;
+    const img = imgRef.current;
+    if (!el || !img) return;
+    const maxX = Math.max(0, (img.offsetWidth - el.clientWidth) / 2);
+    const maxY = Math.max(0, (img.offsetHeight - el.clientHeight) / 2);
+    const cx = Math.min(maxX, Math.max(-maxX, x));
+    const cy = Math.min(maxY, Math.max(-maxY, y));
+    pan.current = { x: cx, y: cy };
+    img.style.transform = `translate3d(${cx}px, ${cy}px, 0)`;
+  }, []);
+
+  const toggleZoom = useCallback(() => {
+    pan.current = { x: 0, y: 0 };
+    setZoomed((z) => !z);
+  }, []);
   const locale = useLocale() as 'en' | 'he';
   const t = useTranslations('Gallery');
   const tContact = useTranslations('Contact');
@@ -93,17 +143,44 @@ export default function GalleryGrid({
     [filtered.length],
   );
 
+  // reset zoom + pan whenever the shown image changes (open, close, or step)
+  useEffect(() => {
+    setZoomed(false);
+    pan.current = { x: 0, y: 0 };
+  }, [lightbox]);
+
+  const close = useCallback(() => {
+    if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
+    // drop focus from the trigger so its focus-visible ring (painted after a
+    // keyboard Esc) doesn't linger as a line over the frame
+    (document.activeElement as HTMLElement | null)?.blur();
+    setLightbox(null);
+  }, []);
+
+  const toggleFullscreen = useCallback(() => {
+    if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
+    else lightboxRef.current?.requestFullscreen().catch(() => {});
+  }, []);
+
+  const share = useCallback(async (url: string, title: string) => {
+    if (navigator.share) {
+      await navigator.share({ title, url }).catch(() => {});
+    } else {
+      await navigator.clipboard?.writeText(url).catch(() => {});
+    }
+  }, []);
+
   // arrow keys navigate, Esc closes (a plain overlay, not native <dialog>)
   useEffect(() => {
     if (lightbox === null) return;
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') setLightbox(null);
+      if (e.key === 'Escape') close();
       else if (e.key === 'ArrowRight') step(1);
       else if (e.key === 'ArrowLeft') step(-1);
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [lightbox, step]);
+  }, [lightbox, step, close]);
 
   return (
     <section>
@@ -162,7 +239,7 @@ export default function GalleryGrid({
                         type="button"
                         aria-label={label ?? t('view')}
                         onClick={() => setLightbox(i)}
-                        className="inline-block max-w-full cursor-zoom-in border border-neutral-200 bg-white p-1.5 shadow-sm transition-shadow hover:shadow-md"
+                        className="group relative inline-block max-w-full cursor-zoom-in overflow-hidden border border-neutral-200 bg-white p-1.5 shadow-sm transition-shadow hover:shadow-md"
                       >
                         {/* thin uniform white line (p-1.5) that hugs the
                             image exactly: capped by max-height (and container
@@ -179,17 +256,17 @@ export default function GalleryGrid({
                           sizes="90vw"
                           className="h-auto max-h-80 w-auto max-w-full sm:max-h-128"
                         />
+                        {/* hover: blur the image behind a white wash and reveal
+                            the caption pinned to the bottom */}
+                        {item.artistName && (
+                          <span className="pointer-events-none absolute inset-0 flex transform-gpu items-end justify-center opacity-0 transition-opacity duration-150 group-hover:opacity-100">
+                            <span className="absolute inset-0 bg-white/80 backdrop-blur-md" />
+                            <span className="relative p-4 text-center text-neutral-700">
+                              <Caption item={item} locale={locale} />
+                            </span>
+                          </span>
+                        )}
                       </button>
-                      {item.artistName && (
-                        <figcaption className="mt-3 text-center text-sm font-medium text-neutral-900">
-                          {item.artistName[locale]}
-                        </figcaption>
-                      )}
-                      {item.extraInfo && (
-                        <p className="mt-1 text-center text-sm text-neutral-600">
-                          <LinkifiedText text={item.extraInfo} />
-                        </p>
-                      )}
                     </figure>
                   );
                 })}
@@ -205,38 +282,155 @@ export default function GalleryGrid({
       </div>
       {lightbox !== null && filtered[lightbox] && (
         <div
+          ref={lightboxRef}
           role="dialog"
           aria-modal="true"
-          onClick={() => setLightbox(null)}
-          className="fixed inset-0 z-50 flex cursor-zoom-out items-center justify-center bg-black/90 p-4"
+          onClick={close}
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black p-4"
         >
+          {/* counter, top-left */}
+          <span className="pointer-events-none absolute top-4 left-4 text-sm text-white/80">
+            {lightbox + 1} / {filtered.length}
+          </span>
+
+          {/* toolbar, top-right: zoom, full screen, share, close */}
+          <div className="absolute top-3 right-3 flex items-center gap-5 text-white/80">
+            <button
+              type="button"
+              aria-label={t('zoom')}
+              onClick={(e) => {
+                e.stopPropagation();
+                toggleZoom();
+              }}
+              className="transition-colors hover:text-white"
+            >
+              <ZoomIcon />
+            </button>
+            <button
+              type="button"
+              aria-label={t('fullscreen')}
+              onClick={(e) => {
+                e.stopPropagation();
+                toggleFullscreen();
+              }}
+              className="transition-colors hover:text-white"
+            >
+              <FullscreenIcon />
+            </button>
+            <button
+              type="button"
+              aria-label={t('share')}
+              onClick={(e) => {
+                e.stopPropagation();
+                const img = filtered[lightbox];
+                void share(
+                  urlFor(img.image).width(2000).auto('format').url(),
+                  img.artistName?.[locale] ?? 'Artwork',
+                );
+              }}
+              className="transition-colors hover:text-white"
+            >
+              <ShareIcon />
+            </button>
+            <button
+              type="button"
+              aria-label={t('close')}
+              onClick={(e) => {
+                e.stopPropagation();
+                close();
+              }}
+              className="transition-colors hover:text-white"
+            >
+              <CloseIcon />
+            </button>
+          </div>
+
+          {/* prev / next arrows on the sides */}
+          <button
+            type="button"
+            aria-label={t('previous')}
+            onClick={(e) => {
+              e.stopPropagation();
+              step(-1);
+            }}
+            className="absolute top-1/2 left-2 -translate-y-1/2 p-2 text-white/70 transition-colors hover:text-white sm:left-6"
+          >
+            <ArrowIcon dir="left" />
+          </button>
+          <button
+            type="button"
+            aria-label={t('next')}
+            onClick={(e) => {
+              e.stopPropagation();
+              step(1);
+            }}
+            className="absolute top-1/2 right-2 -translate-y-1/2 p-2 text-white/70 transition-colors hover:text-white sm:right-6"
+          >
+            <ArrowIcon dir="right" />
+          </button>
+
+          {/* image; click toggles zoom, drag the grab-hand to pan when zoomed */}
           <div
-            className="relative flex max-h-full max-w-full"
+            ref={panRef}
+            className={
+              zoomed
+                ? 'flex h-full w-full cursor-grab touch-none items-center justify-center overflow-hidden select-none active:cursor-grabbing'
+                : 'flex max-h-full max-w-full items-center justify-center'
+            }
             onClick={(e) => e.stopPropagation()}
+            onPointerDown={(e) => {
+              if (!zoomed || !panRef.current) return;
+              drag.current = {
+                active: true,
+                moved: false,
+                x: e.clientX,
+                y: e.clientY,
+                px: pan.current.x,
+                py: pan.current.y,
+              };
+              panRef.current.setPointerCapture(e.pointerId);
+            }}
+            onPointerMove={(e) => {
+              if (!drag.current.active) return;
+              const dx = e.clientX - drag.current.x;
+              const dy = e.clientY - drag.current.y;
+              if (Math.abs(dx) > 3 || Math.abs(dy) > 3) drag.current.moved = true;
+              applyPan(drag.current.px + dx, drag.current.py + dy);
+            }}
+            onPointerUp={() => {
+              drag.current.active = false;
+            }}
           >
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
+              ref={imgRef}
               src={urlFor(filtered[lightbox].image)
                 .width(2000)
                 .auto('format')
                 .url()}
               alt={filtered[lightbox].artistName?.[locale] ?? ''}
-              className="max-h-[90vh] max-w-full object-contain"
-            />
-            {/* left/right halves step through the images */}
-            <button
-              type="button"
-              aria-label={t('previous')}
-              onClick={() => step(-1)}
-              className="absolute inset-y-0 left-0 w-1/2 cursor-w-resize"
-            />
-            <button
-              type="button"
-              aria-label={t('next')}
-              onClick={() => step(1)}
-              className="absolute inset-y-0 right-0 w-1/2 cursor-e-resize"
+              draggable={false}
+              onClick={() => {
+                // ignore the click that ends a pan drag
+                if (drag.current.moved) return;
+                toggleZoom();
+              }}
+              className={
+                zoomed
+                  ? 'w-auto max-w-none will-change-transform'
+                  : 'max-h-[90vh] max-w-full cursor-zoom-in object-contain'
+              }
             />
           </div>
+
+          {/* caption always visible at the bottom while maximized */}
+          {filtered[lightbox].artistName && (
+            <div className="pointer-events-none absolute inset-x-0 bottom-0 flex justify-center p-6">
+              <div className="max-w-xl text-center text-white">
+                <Caption item={filtered[lightbox]} locale={locale} />
+              </div>
+            </div>
+          )}
         </div>
       )}
     </section>

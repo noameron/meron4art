@@ -14,7 +14,18 @@
     "empty": "No pieces in this category yet.",
     "view": "View full size",
     "previous": "Previous image",
-    "next": "Next image"
+    "next": "Next image",
+    "zoom": "Zoom",
+    "fullscreen": "Full screen",
+    "share": "Share",
+    "close": "Close"
+  },
+  "Footer": {
+    "home": "Home",
+    "sitemap": "Sitemap",
+    "contact": "Contact",
+    "tagline": "Fine-art reproduction photography for artists and galleries.",
+    "rights": "All rights reserved"
   },
   "Contact": {
     "details": "Details",

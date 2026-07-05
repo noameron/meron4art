@@ -32,12 +32,7 @@ function renderFilterBar(
 describe('FilterBar', () => {
   it('renders the categories and Contact as links, but no All tab', () => {
     renderFilterBar();
-    for (const name of [
-      'Pure Paintings',
-      'Pictures from Galleries',
-      '3D Arts, Sculptures etc.',
-      'Contact',
-    ]) {
+    for (const name of ['Art Repro', '3D Art', 'Shows', 'Contact']) {
       expect(screen.getAllByRole('link', { name }).length).toBeGreaterThan(0);
     }
     expect(screen.queryByRole('link', { name: 'All' })).not.toBeInTheDocument();
@@ -50,7 +45,7 @@ describe('FilterBar', () => {
       '/',
     );
     expect(
-      screen.getAllByRole('link', { name: 'Pure Paintings' })[0],
+      screen.getAllByRole('link', { name: 'Art Repro' })[0],
     ).toHaveAttribute('href', '/paintings');
     expect(screen.getAllByRole('link', { name: 'Contact' })[0]).toHaveAttribute(
       'href',
@@ -71,10 +66,10 @@ describe('FilterBar', () => {
   it('marks only the active tab with aria-current', () => {
     renderFilterBar('paintings');
     expect(
-      screen.getAllByRole('link', { name: 'Pure Paintings' })[0],
+      screen.getAllByRole('link', { name: 'Art Repro' })[0],
     ).toHaveAttribute('aria-current', 'page');
     expect(
-      screen.getAllByRole('link', { name: 'Pictures from Galleries' })[0],
+      screen.getAllByRole('link', { name: 'Shows' })[0],
     ).not.toHaveAttribute('aria-current');
   });
 });
