@@ -5,9 +5,9 @@
   },
   "Filters": {
     "all": "All",
-    "paintings": "Pure Paintings",
-    "gallery-pictures": "Pictures from Galleries",
-    "3d-sculpture": "3D Arts, Sculptures etc.",
+    "paintings": "Art Repro",
+    "3d-sculpture": "3D Art",
+    "gallery-pictures": "Shows",
     "contact": "Contact"
   },
   "Gallery": {

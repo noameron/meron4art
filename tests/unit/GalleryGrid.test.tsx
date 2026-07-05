@@ -107,6 +107,21 @@ describe('GalleryGrid', () => {
     expect(screen.queryAllByRole('figure')).toHaveLength(0);
   });
 
+  it('renders a URL in extraInfo as a plain-looking clickable link', () => {
+    renderGrid('paintings', [
+      item({
+        _id: 'x',
+        category: 'paintings',
+        extraInfo: 'see www.artist.example for more',
+      }),
+    ]);
+    const link = screen.getByRole('link', { name: 'www.artist.example' });
+    expect(link).toHaveAttribute('href', 'https://www.artist.example');
+    expect(link).toHaveClass('no-underline', 'text-inherit');
+    // surrounding free text is preserved
+    expect(screen.getByText(/for more/)).toBeInTheDocument();
+  });
+
   it('omits the caption entirely when an item has no artist name', () => {
     renderGrid('paintings', [item({ _id: 'bare', category: 'paintings' })]);
     const figure = screen.getByRole('figure');

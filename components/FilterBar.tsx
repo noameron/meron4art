@@ -1,8 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import Image from 'next/image';
-import { useTranslations } from 'next-intl';
+import { useLocale, useTranslations } from 'next-intl';
 import { Link } from '@/i18n/navigation';
 import {
   FILTER_VALUES,
@@ -24,7 +24,17 @@ export function Logo({ className }: { className: string }) {
 
 export default function FilterBar({ active }: { active: FilterValue }) {
   const t = useTranslations('Filters');
+  const locale = useLocale();
   const [open, setOpen] = useState(false);
+  const rtl = locale === 'he';
+
+  // Lock background scroll while the drawer is open
+  useEffect(() => {
+    document.body.style.overflow = open ? 'hidden' : '';
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [open]);
 
   // 'all' is the bare landing route (/), reached via the logo — not a tab
   const tabLinks = FILTER_VALUES.filter((v) => v !== 'all').map((option) => {
@@ -63,11 +73,41 @@ export default function FilterBar({ active }: { active: FilterValue }) {
           ☰
         </button>
       </div>
-      {open && (
-        <div className="flex flex-col items-start gap-4 border-t border-neutral-100 px-6 py-4 sm:hidden">
-          {tabLinks}
+      {/* mobile: full-height drawer sliding in from the trailing edge
+          (right for LTR, left for RTL) with the logo at the top */}
+      <div
+        aria-hidden={!open}
+        onClick={() => setOpen(false)}
+        className={`fixed inset-0 z-40 bg-black/40 transition-opacity duration-300 sm:hidden ${
+          open ? 'opacity-100' : 'pointer-events-none opacity-0'
+        }`}
+      />
+      <div
+        className={`fixed inset-y-0 z-50 flex w-4/5 max-w-xs flex-col gap-8 bg-white px-6 py-6 shadow-xl transition-transform duration-300 ease-in-out sm:hidden ${
+          rtl ? 'left-0' : 'right-0'
+        } ${
+          open
+            ? 'translate-x-0'
+            : rtl
+              ? '-translate-x-full'
+              : 'translate-x-full'
+        }`}
+      >
+        <div className="flex items-center justify-between">
+          <Link href="/" aria-label="Home" onClick={() => setOpen(false)}>
+            <Logo className="h-6 w-auto" />
+          </Link>
+          <button
+            type="button"
+            aria-label="Close menu"
+            onClick={() => setOpen(false)}
+            className="text-2xl leading-none text-neutral-700"
+          >
+            ✕
+          </button>
         </div>
-      )}
+        <div className="flex flex-col items-start gap-5">{tabLinks}</div>
+      </div>
       {/* desktop: logo + options in one row */}
       <div className="hidden flex-wrap items-center gap-x-6 gap-y-2 px-6 py-6 sm:flex sm:px-12">
         <Link href="/" aria-label="Home" onClick={() => setOpen(false)}>
