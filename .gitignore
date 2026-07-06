@@ -47,6 +47,7 @@ yarn-error.log*
 # playwright
 /playwright-report/
 /test-results/
+/.playwright-mcp/
 
 # typescript
 *.tsbuildinfo
