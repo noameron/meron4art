@@ -11,8 +11,14 @@ export const allPortfolioItemsQuery = groq`
   }
 `;
 
+// falls back to the retired singular "heroImage" field so a site that
+// hasn't been re-edited in Studio yet still shows its existing hero photo
 export const siteSettingsQuery = groq`
   *[_type == "siteSettings"][0] {
-    heroImage
+    "heroImages": select(
+      defined(heroImages) && count(heroImages) > 0 => heroImages,
+      defined(heroImage) => [heroImage],
+      []
+    )
   }
 `;

@@ -1,7 +1,8 @@
 {
   "Hero": {
     "name": "Omri Meron – Fine Art and Commercial Photographer",
-    "bio": "Fine Art and Commercial Photographer, SVA New York graduate. Driven by a deep understanding of an artist's needs and backed by extensive experience with leading clients locally and worldwide, I offer precise and meticulous artwork reproduction photography (at my Tel Aviv studio or on-site at your location). The process utilizes tethered shooting directly to a computer for real-time viewing, and includes final digital retouching and cleaning to ensure absolute fidelity to the original piece."
+    "bio": "Fine Art and Commercial Photographer, SVA New York graduate. Driven by a deep understanding of an artist's needs and backed by extensive experience with leading clients locally and worldwide, I offer precise and meticulous artwork reproduction photography (at my Tel Aviv studio or on-site at your location). The process utilizes tethered shooting directly to a computer for real-time viewing, and includes final digital retouching and cleaning to ensure absolute fidelity to the original piece.",
+    "photo": "Photo {number}"
   },
   "Filters": {
     "all": "All",
