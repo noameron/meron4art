@@ -8,9 +8,12 @@ import en from '@/messages/en.json';
 
 // FilterBar (rendered inside GalleryGrid) uses next-intl's Link → next/navigation,
 // unresolved in jsdom; stub it with a plain <a>.
+// usePathname/useRouter back FilterBar's embedded LocaleSwitcher.
 vi.mock('@/i18n/navigation', () => ({
   Link: ({ href, children, ...props }: Record<string, unknown>) =>
     createElement('a', { href, ...props }, children as React.ReactNode),
+  usePathname: () => '/',
+  useRouter: () => ({ replace: vi.fn() }),
 }));
 
 vi.mock('@/sanity/lib/image', () => ({

@@ -13,31 +13,24 @@ export default function LocaleSwitcher() {
   const pathname = usePathname();
   const router = useRouter();
 
+  // show only the language you can switch to, not the current one
+  const target = LOCALES.find(({ code }) => code !== locale) ?? LOCALES[0];
+
   return (
-    // physical right-4 (not end-4): the toggle must stay in the same corner
-    // in both languages, and top-20 keeps it clear of the sticky tab bar
-    <div className="fixed top-20 right-4 z-50 flex gap-1 rounded-full border border-neutral-200 bg-white/90 p-1 shadow-sm backdrop-blur-sm">
-      {LOCALES.map(({ code, flag, name }) => (
-        <button
-          key={code}
-          type="button"
-          aria-label={name}
-          aria-pressed={locale === code}
-          onClick={() => {
-            // flag so the gallery skips its scroll-to-content on the remount,
-            // and scroll:false keeps the reader exactly where they were
-            sessionStorage.setItem('localeSwitch', '1');
-            // pathname is locale-stripped, so this keeps the active tab
-            // (e.g. /paintings) and just swaps the locale prefix
-            router.replace(pathname, { locale: code, scroll: false });
-          }}
-          className={`rounded-full px-2.5 py-1.5 text-sm transition-colors ${
-            locale === code ? 'bg-neutral-900' : 'opacity-50 hover:opacity-100'
-          }`}
-        >
-          {flag}
-        </button>
-      ))}
-    </div>
+    <button
+      type="button"
+      aria-label={target.name}
+      onClick={() => {
+        // flag so the gallery skips its scroll-to-content on the remount,
+        // and scroll:false keeps the reader exactly where they were
+        sessionStorage.setItem('localeSwitch', '1');
+        // pathname is locale-stripped, so this keeps the active tab
+        // (e.g. /paintings) and just swaps the locale prefix
+        router.replace(pathname, { locale: target.code, scroll: false });
+      }}
+      className="text-lg leading-none opacity-80 transition-opacity hover:opacity-100"
+    >
+      {target.flag}
+    </button>
   );
 }

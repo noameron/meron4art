@@ -1,10 +1,12 @@
 import { test, expect, type Page } from '@playwright/test';
 
-const EN_FILTERS = [
-  'Pure Paintings',
-  'Pictures from Galleries',
-  '3D Arts, Sculptures etc.',
-];
+const EN_FILTERS = ['Art Repro', 'Shows', '3D Art'];
+
+// the footer sitemap repeats the tab links, so tab assertions must be
+// scoped to the top tab bar (the first nav on the page)
+function tabBar(page: Page) {
+  return page.getByRole('navigation').first();
+}
 
 function collectPageErrors(page: Page): string[] {
   const errors: string[] = [];
@@ -39,7 +41,7 @@ test.describe('home page', () => {
     await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
     for (const label of EN_FILTERS) {
       await expect(
-        page.getByRole('link', { name: label, exact: true }),
+        tabBar(page).getByRole('link', { name: label, exact: true }),
       ).toBeVisible();
     }
 
@@ -53,15 +55,15 @@ test.describe('home page', () => {
     page,
   }) => {
     await page.goto('/en');
-    await page.getByRole('link', { name: 'Pure Paintings' }).click();
+    await tabBar(page).getByRole('link', { name: 'Art Repro' }).click();
 
     await expect(page).toHaveURL(/\/en\/paintings$/);
     await expect(
-      page.getByRole('link', { name: 'Pure Paintings' }),
+      tabBar(page).getByRole('link', { name: 'Art Repro' }),
     ).toHaveAttribute('aria-current', 'page');
 
     // logo returns to the full landing view
-    await page.getByRole('link', { name: 'Home' }).first().click();
+    await tabBar(page).getByRole('link', { name: 'Home' }).first().click();
     await expect(page).toHaveURL(/\/en$/);
   });
 
@@ -101,16 +103,26 @@ test.describe('home page', () => {
   }) => {
     await page.goto('/en');
 
-    await page.getByRole('button', { name: 'עברית' }).click();
+    // the switcher renders in both the mobile and desktop nav rows,
+    // so filter to the one visible at the current breakpoint
+    await page
+      .getByRole('button', { name: 'עברית' })
+      .filter({ visible: true })
+      .click();
     await expect(page).toHaveURL(/\/he$/);
     await expect(page.locator('html')).toHaveAttribute('dir', 'rtl');
-    await expect(page.getByRole('link', { name: 'ציורים' })).toBeVisible();
+    await expect(
+      tabBar(page).getByRole('link', { name: 'ציורים' }),
+    ).toBeVisible();
 
-    await page.getByRole('button', { name: 'English' }).click();
+    await page
+      .getByRole('button', { name: 'English' })
+      .filter({ visible: true })
+      .click();
     await expect(page).toHaveURL(/\/en$/);
     await expect(page.locator('html')).toHaveAttribute('dir', 'ltr');
     await expect(
-      page.getByRole('link', { name: 'Pure Paintings' }),
+      tabBar(page).getByRole('link', { name: 'Art Repro' }),
     ).toBeVisible();
   });
 
@@ -120,21 +132,28 @@ test.describe('home page', () => {
     await page.setViewportSize({ width: 390, height: 844 });
     await page.goto('/en');
 
-    // options are collapsed behind the hamburger on mobile
+    // options live in the drawer, which sits off-screen until the
+    // hamburger opens it (so toBeHidden doesn't apply; check the viewport)
     await expect(
-      page.getByRole('link', { name: 'Pure Paintings' }),
-    ).toBeHidden();
+      tabBar(page).getByRole('link', { name: 'Art Repro' }),
+    ).not.toBeInViewport();
 
-    await page.getByRole('button', { name: 'Menu' }).click();
-    await page.getByRole('link', { name: 'Contact' }).click();
+    await page.getByRole('button', { name: 'Menu', exact: true }).click();
+    await expect(
+      tabBar(page).getByRole('link', { name: 'Art Repro' }),
+    ).toBeInViewport();
+    await tabBar(page).getByRole('link', { name: 'Contact' }).click();
     await expect(page).toHaveURL(/\/en\/contact$/);
-    await expect(page.getByText('Omri Meron')).toBeVisible();
+    // the hero h1 also carries the name, so match the first occurrence
+    await expect(
+      page.getByRole('main').getByText('Omri Meron').first(),
+    ).toBeVisible();
   });
 
   test('tab bar stays pinned to the top while scrolling', async ({ page }) => {
     await page.goto('/en');
     await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
-    const nav = page.locator('nav');
+    const nav = tabBar(page);
     expect(
       await nav.evaluate((el) => el.getBoundingClientRect().top),
     ).toBeLessThanOrEqual(1);
@@ -143,12 +162,14 @@ test.describe('home page', () => {
   test('active tab survives a locale switch', async ({ page }) => {
     await page.goto('/en/paintings');
 
-    await page.getByRole('button', { name: 'עברית' }).click();
+    await page
+      .getByRole('button', { name: 'עברית' })
+      .filter({ visible: true })
+      .click();
     await expect(page).toHaveURL(/\/he\/paintings$/);
-    await expect(page.getByRole('link', { name: 'ציורים' })).toHaveAttribute(
-      'aria-current',
-      'page',
-    );
+    await expect(
+      tabBar(page).getByRole('link', { name: 'ציורים' }),
+    ).toHaveAttribute('aria-current', 'page');
   });
 
   test('contact route shows the contact details with working links', async ({
@@ -156,7 +177,10 @@ test.describe('home page', () => {
   }) => {
     await page.goto('/en/contact');
 
-    await expect(page.getByText('Omri Meron')).toBeVisible();
+    // the hero h1 also carries the name, so match the first occurrence
+    await expect(
+      page.getByRole('main').getByText('Omri Meron').first(),
+    ).toBeVisible();
 
     const email = page.getByRole('link', { name: 'Email' });
     await expect(email).toBeVisible();
