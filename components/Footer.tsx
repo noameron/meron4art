@@ -75,6 +75,10 @@ export async function Footer({ locale }: { locale: 'en' | 'he' }) {
           </div>
         </div>
       </div>
+
+      <div className="mx-auto mt-12 max-w-4xl border-t border-neutral-200 pt-8 text-center text-xs leading-relaxed text-neutral-400">
+        <p>{t('Footer.copyrightNotice')}</p>
+      </div>
     </footer>
   );
 }

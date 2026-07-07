@@ -12,12 +12,21 @@ import {
 } from '@/sanity/lib/types';
 
 export function Logo({ className }: { className: string }) {
-  return (
+  const locale = useLocale();
+  return locale === 'he' ? (
     <Image
-      src="/logo.jpeg"
+      src="/heb_logo.jpeg"
       alt="Studio Omri Meron"
-      width={1600}
-      height={878}
+      width={646}
+      height={358}
+      className={className}
+    />
+  ) : (
+    <Image
+      src="/english_logo.jpeg"
+      alt="Studio Omri Meron"
+      width={755}
+      height={341}
       className={className}
     />
   );
@@ -59,12 +68,16 @@ export default function FilterBar({ active }: { active: FilterValue }) {
 
   return (
     <nav className="sticky top-0 z-40 border-b border-neutral-200 bg-white">
-      {/* mobile: logo + hamburger, options in a collapsible panel */}
-      <div className="flex items-center justify-between px-6 py-4 sm:hidden">
+      {/* mobile: logo + hamburger, options in a collapsible panel.
+          The toggle+hamburger cluster is pinned to the physical right with
+          absolute positioning (not flex start/end) so it stays in the same
+          corner in both languages instead of mirroring with dir=rtl; pr-24
+          on the row reserves that corner so the logo never grows under it. */}
+      <div className="relative flex items-center py-4 pr-24 pl-6 sm:hidden">
         <Link href="/" aria-label="Home" onClick={() => setOpen(false)}>
           <Logo className="h-6 w-auto" />
         </Link>
-        <div className="flex items-center gap-4">
+        <div className="absolute top-1/2 right-4 flex -translate-y-1/2 items-center gap-4">
           <LocaleSwitcher />
           <button
             type="button"
@@ -115,13 +128,14 @@ export default function FilterBar({ active }: { active: FilterValue }) {
         </div>
         <div className="flex flex-col items-start gap-5">{tabLinks}</div>
       </div>
-      {/* desktop: logo + options in one row */}
-      <div className="hidden flex-wrap items-center gap-x-6 gap-y-2 px-6 py-6 sm:flex sm:px-12">
+      {/* desktop: logo + options in one row. Same physical-right pin as the
+          mobile bar above; pr-20/sm:pr-24 keeps tabs from wrapping under it. */}
+      <div className="relative hidden flex-wrap items-center gap-x-6 gap-y-2 py-6 pr-20 pl-6 sm:flex sm:pr-24 sm:pl-12">
         <Link href="/" aria-label="Home" onClick={() => setOpen(false)}>
           <Logo className="h-6 w-auto" />
         </Link>
         {tabLinks}
-        <div className="ms-auto">
+        <div className="absolute top-1/2 right-6 -translate-y-1/2 sm:right-12">
           <LocaleSwitcher />
         </div>
       </div>

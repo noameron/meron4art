@@ -32,11 +32,6 @@ const FullscreenIcon = () => (
     <path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5" />
   </svg>
 );
-const ShareIcon = () => (
-  <svg {...iconProps}>
-    <path d="M4 12v7a1 1 0 001 1h14a1 1 0 001-1v-7M16 6l-4-4-4 4M12 2v13" />
-  </svg>
-);
 const CloseIcon = () => (
   <svg {...iconProps}>
     <path d="M6 6l12 12M18 6L6 18" />
@@ -162,14 +157,6 @@ export default function GalleryGrid({
     else lightboxRef.current?.requestFullscreen().catch(() => {});
   }, []);
 
-  const share = useCallback(async (url: string, title: string) => {
-    if (navigator.share) {
-      await navigator.share({ title, url }).catch(() => {});
-    } else {
-      await navigator.clipboard?.writeText(url).catch(() => {});
-    }
-  }, []);
-
   // arrow keys navigate, Esc closes (a plain overlay, not native <dialog>)
   useEffect(() => {
     if (lightbox === null) return;
@@ -254,7 +241,9 @@ export default function GalleryGrid({
                           width={item.imgWidth ?? 1200}
                           height={item.imgHeight ?? 900}
                           sizes="90vw"
-                          className="h-auto max-h-80 w-auto max-w-full sm:max-h-128"
+                          draggable={false}
+                          onContextMenu={(e) => e.preventDefault()}
+                          className="no-save h-auto max-h-80 w-auto max-w-full sm:max-h-128"
                         />
                         {/* hover: blur the image behind a white wash and reveal
                             the caption pinned to the bottom */}
@@ -293,7 +282,7 @@ export default function GalleryGrid({
             {lightbox + 1} / {filtered.length}
           </span>
 
-          {/* toolbar, top-right: zoom, full screen, share, close */}
+          {/* toolbar, top-right: zoom, full screen, close */}
           <div className="absolute top-3 right-3 flex items-center gap-5 text-white/80">
             <button
               type="button"
@@ -316,21 +305,6 @@ export default function GalleryGrid({
               className="transition-colors hover:text-white"
             >
               <FullscreenIcon />
-            </button>
-            <button
-              type="button"
-              aria-label={t('share')}
-              onClick={(e) => {
-                e.stopPropagation();
-                const img = filtered[lightbox];
-                void share(
-                  urlFor(img.image).width(2000).auto('format').url(),
-                  img.artistName?.[locale] ?? 'Artwork',
-                );
-              }}
-              className="transition-colors hover:text-white"
-            >
-              <ShareIcon />
             </button>
             <button
               type="button"
@@ -410,6 +384,7 @@ export default function GalleryGrid({
                 .url()}
               alt={filtered[lightbox].artistName?.[locale] ?? ''}
               draggable={false}
+              onContextMenu={(e) => e.preventDefault()}
               onClick={() => {
                 // ignore the click that ends a pan drag
                 if (drag.current.moved) return;
@@ -417,8 +392,8 @@ export default function GalleryGrid({
               }}
               className={
                 zoomed
-                  ? 'w-auto max-w-none will-change-transform'
-                  : 'max-h-[90vh] max-w-full cursor-zoom-in object-contain'
+                  ? 'no-save w-auto max-w-none will-change-transform'
+                  : 'no-save max-h-[90vh] max-w-full cursor-zoom-in object-contain'
               }
             />
           </div>
