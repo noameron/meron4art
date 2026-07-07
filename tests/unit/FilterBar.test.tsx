@@ -10,9 +10,12 @@ import he from '@/messages/he.json';
 // next-intl's Link pulls next/navigation, unresolved in jsdom; stub it with a
 // plain <a> so we test the relative hrefs FilterBar builds. The /en, /he
 // prefixing is next-intl's job and is covered by the e2e suite.
+// usePathname/useRouter back the embedded LocaleSwitcher.
 vi.mock('@/i18n/navigation', () => ({
   Link: ({ href, children, ...props }: Record<string, unknown>) =>
     createElement('a', { href, ...props }, children as React.ReactNode),
+  usePathname: () => '/',
+  useRouter: () => ({ replace: vi.fn() }),
 }));
 
 function renderFilterBar(

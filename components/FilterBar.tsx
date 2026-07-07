@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import Image from 'next/image';
 import { useLocale, useTranslations } from 'next-intl';
 import { Link } from '@/i18n/navigation';
+import LocaleSwitcher from './LocaleSwitcher';
 import {
   FILTER_VALUES,
   pathForFilter,
@@ -63,15 +64,18 @@ export default function FilterBar({ active }: { active: FilterValue }) {
         <Link href="/" aria-label="Home" onClick={() => setOpen(false)}>
           <Logo className="h-6 w-auto" />
         </Link>
-        <button
-          type="button"
-          aria-label="Menu"
-          aria-expanded={open}
-          onClick={() => setOpen(!open)}
-          className="text-2xl leading-none text-neutral-700"
-        >
-          ☰
-        </button>
+        <div className="flex items-center gap-4">
+          <LocaleSwitcher />
+          <button
+            type="button"
+            aria-label="Menu"
+            aria-expanded={open}
+            onClick={() => setOpen(!open)}
+            className="text-2xl leading-none text-neutral-700"
+          >
+            ☰
+          </button>
+        </div>
       </div>
       {/* mobile: full-height drawer sliding in from the trailing edge
           (right for LTR, left for RTL) with the logo at the top */}
@@ -83,6 +87,9 @@ export default function FilterBar({ active }: { active: FilterValue }) {
         }`}
       />
       <div
+        // closed drawer is only translated off-screen, so inert keeps its
+        // links out of the tab order and the accessibility tree
+        inert={!open}
         className={`fixed inset-y-0 z-50 flex w-4/5 max-w-xs flex-col gap-8 bg-white px-6 py-6 shadow-xl transition-transform duration-300 ease-in-out sm:hidden ${
           rtl ? 'left-0' : 'right-0'
         } ${
@@ -114,6 +121,9 @@ export default function FilterBar({ active }: { active: FilterValue }) {
           <Logo className="h-6 w-auto" />
         </Link>
         {tabLinks}
+        <div className="ms-auto">
+          <LocaleSwitcher />
+        </div>
       </div>
     </nav>
   );

@@ -4,7 +4,6 @@ import { setRequestLocale } from 'next-intl/server';
 import { notFound } from 'next/navigation';
 import { Rubik } from 'next/font/google';
 import { routing } from '@/i18n/routing';
-import LocaleSwitcher from '@/components/LocaleSwitcher';
 import { Footer } from '@/components/Footer';
 import '../globals.css';
 
@@ -53,7 +52,6 @@ export default async function LocaleLayout({
     >
       <body className="min-h-screen bg-white font-body text-neutral-900 antialiased">
         <NextIntlClientProvider>
-          <LocaleSwitcher />
           {children}
           <Footer locale={locale as 'en' | 'he'} />
         </NextIntlClientProvider>
