@@ -39,13 +39,21 @@ const CloseIcon = () => (
 );
 const ArrowIcon = ({ dir }: { dir: 'left' | 'right' }) => (
   <svg {...iconProps} width={28} height={28}>
-    {dir === 'left' ? (
-      <path d="M15 5l-7 7 7 7" />
-    ) : (
-      <path d="M9 5l7 7-7 7" />
-    )}
+    {dir === 'left' ? <path d="M15 5l-7 7 7 7" /> : <path d="M9 5l7 7-7 7" />}
   </svg>
 );
+const FirstPageIcon = () => (
+  <svg {...iconProps}>
+    <path d="M18 5v14M13 5l-7 7 7 7" />
+  </svg>
+);
+const LastPageIcon = () => (
+  <svg {...iconProps}>
+    <path d="M6 5v14M11 5l7 7-7 7" />
+  </svg>
+);
+
+const PAGE_SIZE = 5;
 
 // Artist name caption, shared by the grid hover overlay and the lightbox.
 function Caption({
@@ -76,12 +84,23 @@ export default function GalleryGrid({
   const [lightbox, setLightbox] = useState<number | null>(null);
   const [zoomed, setZoomed] = useState(false);
   const lightboxRef = useRef<HTMLDivElement>(null);
+  // current page (0-indexed) within the active category, and whether the
+  // image list is mid-crossfade between pages
+  const [page, setPage] = useState(0);
+  const [fading, setFading] = useState(false);
   // pan container/image + transient pan state, kept in refs and applied via
   // GPU transform imperatively so dragging never triggers a React re-render
   const panRef = useRef<HTMLDivElement>(null);
   const imgRef = useRef<HTMLImageElement>(null);
   const pan = useRef({ x: 0, y: 0 });
-  const drag = useRef({ active: false, moved: false, x: 0, y: 0, px: 0, py: 0 });
+  const drag = useRef({
+    active: false,
+    moved: false,
+    x: 0,
+    y: 0,
+    px: 0,
+    py: 0,
+  });
 
   // move the image to (x,y), clamped so it can't be dragged past its edges
   const applyPan = useCallback((x: number, y: number) => {
@@ -110,6 +129,10 @@ export default function GalleryGrid({
   // landing on a category/contact tab — but NOT when the remount was just a
   // language switch (that must preserve the reader's scroll position)
   useEffect(() => {
+    // a new category changes which items exist, so pagination and any open
+    // lightbox from the previous category no longer make sense
+    setPage(0);
+    setLightbox(null);
     if (active === 'all') return;
     if (sessionStorage.getItem('localeSwitch')) {
       sessionStorage.removeItem('localeSwitch');
@@ -129,13 +152,38 @@ export default function GalleryGrid({
     [items, active],
   );
 
-  // step through the lightbox, wrapping around the ends
+  const pageCount = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+  // clamp defensively in case `filtered` shrinks (e.g. items prop changes)
+  const safePage = Math.min(page, pageCount - 1);
+  const pageItems = useMemo(
+    () =>
+      filtered.slice(safePage * PAGE_SIZE, safePage * PAGE_SIZE + PAGE_SIZE),
+    [filtered, safePage],
+  );
+
+  // fade the image list out, swap pages, then fade back in — the open
+  // lightbox is closed since its contents are about to change under it
+  const goToPage = useCallback(
+    (target: number) => {
+      const clamped = Math.min(Math.max(target, 0), pageCount - 1);
+      if (clamped === safePage) return;
+      setLightbox(null);
+      setFading(true);
+      window.setTimeout(() => {
+        setPage(clamped);
+        setFading(false);
+      }, 350);
+    },
+    [pageCount, safePage],
+  );
+
+  // step through the lightbox, wrapping around the ends of the current page
   const step = useCallback(
     (delta: number) =>
       setLightbox((i) =>
-        i === null ? i : (i + delta + filtered.length) % filtered.length,
+        i === null ? i : (i + delta + pageItems.length) % pageItems.length,
       ),
-    [filtered.length],
+    [pageItems.length],
   );
 
   // reset zoom + pan whenever the shown image changes (open, close, or step)
@@ -182,31 +230,36 @@ export default function GalleryGrid({
         {active !== 'all' && <div aria-hidden className="h-[25vh]" />}
         <div ref={contentRef} className="scroll-mt-[4.5rem]">
           {active === 'all' ? null : active === 'contact' ? (
-            <div className="mx-auto flex max-w-3xl flex-col justify-center gap-10 px-6 py-16 sm:flex-row sm:gap-16">
-              <div className="flex flex-col gap-2">
-                <h2 className="text-sm font-bold tracking-widest text-neutral-400 uppercase">
-                  {tContact('details')}
-                </h2>
-                <span className="text-lg font-bold text-neutral-900">
-                  {CONTACT.name[locale]}
-                </span>
-                <a
-                  href={`mailto:${CONTACT.email}`}
-                  aria-label={tContact('email')}
-                  className="text-neutral-600 transition-colors hover:text-neutral-900"
-                >
-                  {CONTACT.email}
-                </a>
-                <a
-                  href={`tel:${CONTACT.tel}`}
-                  aria-label={tContact('phone')}
-                  className="text-neutral-600 transition-colors hover:text-neutral-900"
-                >
-                  {CONTACT.phone}
-                </a>
-              </div>
-              <div className="flex-1">
-                <ContactForm to={CONTACT.email} />
+            <div className="mx-auto flex max-w-3xl flex-col px-6 py-16">
+              <p className="mb-10 max-w-2xl text-base leading-relaxed font-light text-neutral-600">
+                {tContact('intro')}
+              </p>
+              <div className="flex flex-col justify-center gap-10 sm:flex-row sm:gap-16">
+                <div className="flex flex-col gap-2">
+                  <h2 className="text-sm font-bold tracking-widest text-neutral-400 uppercase">
+                    {tContact('details')}
+                  </h2>
+                  <span className="text-lg font-bold text-neutral-900">
+                    {CONTACT.name[locale]}
+                  </span>
+                  <a
+                    href={`mailto:${CONTACT.email}`}
+                    aria-label={tContact('email')}
+                    className="text-neutral-600 transition-colors hover:text-neutral-900"
+                  >
+                    {CONTACT.email}
+                  </a>
+                  <a
+                    href={`tel:${CONTACT.tel}`}
+                    aria-label={tContact('phone')}
+                    className="text-neutral-600 transition-colors hover:text-neutral-900"
+                  >
+                    {CONTACT.phone}
+                  </a>
+                </div>
+                <div className="flex-1">
+                  <ContactForm to={CONTACT.email} />
+                </div>
               </div>
             </div>
           ) : (
@@ -214,8 +267,10 @@ export default function GalleryGrid({
               {/* single centered column; each image is a fixed height and its
                   width follows its aspect ratio, so narrow images leave more
                   blank space at the sides. max-w-full keeps side margins. */}
-              <div className="mx-auto flex max-w-4xl flex-col items-center gap-12 px-6 pt-8 pb-16 sm:px-12">
-                {filtered.map((item, i) => {
+              <div
+                className={`mx-auto flex max-w-4xl flex-col items-center gap-12 px-6 pt-8 pb-16 transition-opacity duration-700 sm:px-12 ${fading ? 'opacity-0' : 'opacity-100'}`}
+              >
+                {pageItems.map((item, i) => {
                   const label = item.artistName?.[locale];
                   return (
                     <figure
@@ -260,6 +315,52 @@ export default function GalleryGrid({
                   );
                 })}
               </div>
+              {pageCount > 1 && (
+                <div className="mt-4 flex items-center justify-center gap-6 pb-4">
+                  <button
+                    type="button"
+                    aria-label={t('pagination.first')}
+                    disabled={safePage === 0}
+                    onClick={() => goToPage(0)}
+                    className="text-neutral-500 transition-colors hover:text-neutral-900 disabled:pointer-events-none disabled:opacity-30"
+                  >
+                    <FirstPageIcon />
+                  </button>
+                  <button
+                    type="button"
+                    aria-label={t('pagination.previous')}
+                    disabled={safePage === 0}
+                    onClick={() => goToPage(safePage - 1)}
+                    className="text-neutral-500 transition-colors hover:text-neutral-900 disabled:pointer-events-none disabled:opacity-30"
+                  >
+                    <ArrowIcon dir="left" />
+                  </button>
+                  <span className="text-sm text-neutral-400">
+                    {t('pagination.status', {
+                      current: safePage + 1,
+                      total: pageCount,
+                    })}
+                  </span>
+                  <button
+                    type="button"
+                    aria-label={t('pagination.next')}
+                    disabled={safePage === pageCount - 1}
+                    onClick={() => goToPage(safePage + 1)}
+                    className="text-neutral-500 transition-colors hover:text-neutral-900 disabled:pointer-events-none disabled:opacity-30"
+                  >
+                    <ArrowIcon dir="right" />
+                  </button>
+                  <button
+                    type="button"
+                    aria-label={t('pagination.last')}
+                    disabled={safePage === pageCount - 1}
+                    onClick={() => goToPage(pageCount - 1)}
+                    className="text-neutral-500 transition-colors hover:text-neutral-900 disabled:pointer-events-none disabled:opacity-30"
+                  >
+                    <LastPageIcon />
+                  </button>
+                </div>
+              )}
               {filtered.length === 0 && (
                 <p className="px-6 py-16 text-center text-sm text-neutral-400 sm:px-12">
                   {t('empty')}
@@ -269,7 +370,7 @@ export default function GalleryGrid({
           )}
         </div>
       </div>
-      {lightbox !== null && filtered[lightbox] && (
+      {lightbox !== null && pageItems[lightbox] && (
         <div
           ref={lightboxRef}
           role="dialog"
@@ -279,7 +380,7 @@ export default function GalleryGrid({
         >
           {/* counter, top-left */}
           <span className="pointer-events-none absolute top-4 left-4 text-sm text-white/80">
-            {lightbox + 1} / {filtered.length}
+            {lightbox + 1} / {pageItems.length}
           </span>
 
           {/* toolbar, top-right: zoom, full screen, close */}
@@ -368,7 +469,8 @@ export default function GalleryGrid({
               if (!drag.current.active) return;
               const dx = e.clientX - drag.current.x;
               const dy = e.clientY - drag.current.y;
-              if (Math.abs(dx) > 3 || Math.abs(dy) > 3) drag.current.moved = true;
+              if (Math.abs(dx) > 3 || Math.abs(dy) > 3)
+                drag.current.moved = true;
               applyPan(drag.current.px + dx, drag.current.py + dy);
             }}
             onPointerUp={() => {
@@ -378,11 +480,11 @@ export default function GalleryGrid({
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               ref={imgRef}
-              src={urlFor(filtered[lightbox].image)
+              src={urlFor(pageItems[lightbox].image)
                 .width(2000)
                 .auto('format')
                 .url()}
-              alt={filtered[lightbox].artistName?.[locale] ?? ''}
+              alt={pageItems[lightbox].artistName?.[locale] ?? ''}
               draggable={false}
               onContextMenu={(e) => e.preventDefault()}
               onClick={() => {
@@ -399,10 +501,10 @@ export default function GalleryGrid({
           </div>
 
           {/* caption always visible at the bottom while maximized */}
-          {filtered[lightbox].artistName && (
+          {pageItems[lightbox].artistName && (
             <div className="pointer-events-none absolute inset-x-0 bottom-0 flex justify-center p-6">
               <div className="max-w-xl text-center text-white">
-                <Caption item={filtered[lightbox]} locale={locale} />
+                <Caption item={pageItems[lightbox]} locale={locale} />
               </div>
             </div>
           )}

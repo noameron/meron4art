@@ -10,7 +10,7 @@ export async function HeroIntro() {
       <h1 className="max-w-2xl font-display text-3xl font-medium tracking-tight sm:text-5xl">
         {t('name')}
       </h1>
-      <p className="mt-4 max-w-xl text-base leading-relaxed font-light text-neutral-600 sm:text-lg">
+      <p className="mt-4 max-w-3xl text-base leading-relaxed font-light text-neutral-600 sm:text-lg">
         {t('bio')}
       </p>
     </div>

@@ -1,8 +1,11 @@
+import { createElement } from 'react';
 import { defineConfig } from 'sanity';
 import { structureTool } from 'sanity/structure';
+import { icons } from '@sanity/icons';
 import { dataset, projectId } from './sanity/env';
 import { schemaTypes } from './sanity/schemaTypes';
 import { structure } from './sanity/structure';
+import { ReorderTool } from './sanity/tools/ReorderTool';
 
 export default defineConfig({
   basePath: '/studio',
@@ -10,6 +13,15 @@ export default defineConfig({
   dataset,
   schema: { types: schemaTypes },
   plugins: [structureTool({ structure })],
+  tools: (prev) => [
+    ...prev,
+    {
+      name: 'reorder',
+      title: 'Reorder Portfolio',
+      icon: () => createElement(icons.sort),
+      component: ReorderTool,
+    },
+  ],
   document: {
     // Site Settings is a fixed singleton (edited via the structure item
     // above) — hide it from the "create new document" menu.
