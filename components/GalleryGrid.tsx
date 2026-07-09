@@ -101,6 +101,9 @@ export default function GalleryGrid({
     px: 0,
     py: 0,
   });
+  // fractional point (0..1) within the image that the next zoom-in should
+  // center on; null means center on the image's own center
+  const zoomOrigin = useRef<{ fx: number; fy: number } | null>(null);
 
   // move the image to (x,y), clamped so it can't be dragged past its edges
   const applyPan = useCallback((x: number, y: number) => {
@@ -115,10 +118,52 @@ export default function GalleryGrid({
     img.style.transform = `translate3d(${cx}px, ${cy}px, 0)`;
   }, []);
 
+  // zoom out to the fitted 100% view (toolbar button, or a click while zoomed)
+  // — resets the imperative pan transform too, so it doesn't carry over and
+  // leave the fitted image translated off-screen on the next zoom-in
+  const zoomOut = useCallback(() => {
+    zoomOrigin.current = null;
+    applyPan(0, 0);
+    setZoomed(false);
+  }, [applyPan]);
+
+  // toolbar zoom button toggles without a click point, so it always
+  // zooms in centered
   const toggleZoom = useCallback(() => {
-    pan.current = { x: 0, y: 0 };
+    zoomOrigin.current = null;
+    applyPan(0, 0);
     setZoomed((z) => !z);
+  }, [applyPan]);
+
+  // zoom in centered on the point the user clicked, in image-local
+  // fractional coordinates (0..1), so the clicked spot ends up centered
+  const zoomInAt = useCallback((clientX: number, clientY: number) => {
+    const img = imgRef.current;
+    if (img) {
+      const rect = img.getBoundingClientRect();
+      zoomOrigin.current = {
+        fx: (clientX - rect.left) / rect.width,
+        fy: (clientY - rect.top) / rect.height,
+      };
+    }
+    setZoomed(true);
   }, []);
+
+  // once the zoomed (native-size) image has laid out, pan so the clicked
+  // point (or the image center, for a toolbar-triggered zoom) is centered
+  useEffect(() => {
+    if (!zoomed) return;
+    const img = imgRef.current;
+    const origin = zoomOrigin.current;
+    zoomOrigin.current = null;
+    if (!img || !origin) {
+      applyPan(0, 0);
+      return;
+    }
+    const px = origin.fx * img.naturalWidth;
+    const py = origin.fy * img.naturalHeight;
+    applyPan(img.naturalWidth / 2 - px, img.naturalHeight / 2 - py);
+  }, [zoomed, applyPan]);
   const locale = useLocale() as 'en' | 'he';
   const t = useTranslations('Gallery');
   const tContact = useTranslations('Contact');
@@ -189,8 +234,9 @@ export default function GalleryGrid({
   // reset zoom + pan whenever the shown image changes (open, close, or step)
   useEffect(() => {
     setZoomed(false);
-    pan.current = { x: 0, y: 0 };
-  }, [lightbox]);
+    zoomOrigin.current = null;
+    applyPan(0, 0);
+  }, [lightbox, applyPan]);
 
   const close = useCallback(() => {
     if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
@@ -452,7 +498,17 @@ export default function GalleryGrid({
                 ? 'flex h-full w-full cursor-grab touch-none items-center justify-center overflow-hidden select-none active:cursor-grabbing'
                 : 'flex max-h-full max-w-full items-center justify-center'
             }
-            onClick={(e) => e.stopPropagation()}
+            onClick={(e) => {
+              // stop the lightbox backdrop's click-to-close from firing
+              e.stopPropagation();
+              // once zoomed, this container holds pointer capture (set
+              // below), so the browser retargets pointerup/click to it
+              // instead of the <img> — handle the toggle here, not on
+              // the image, or a click-to-zoom-out would never fire
+              if (drag.current.moved) return;
+              if (zoomed) zoomOut();
+              else zoomInAt(e.clientX, e.clientY);
+            }}
             onPointerDown={(e) => {
               if (!zoomed || !panRef.current) return;
               drag.current = {
@@ -487,11 +543,6 @@ export default function GalleryGrid({
               alt={pageItems[lightbox].artistName?.[locale] ?? ''}
               draggable={false}
               onContextMenu={(e) => e.preventDefault()}
-              onClick={() => {
-                // ignore the click that ends a pan drag
-                if (drag.current.moved) return;
-                toggleZoom();
-              }}
               className={
                 zoomed
                   ? 'no-save w-auto max-w-none will-change-transform'

@@ -1,6 +1,6 @@
 import { test, expect, type Page } from '@playwright/test';
 
-const EN_FILTERS = ['Art Repro', 'Shows', '3D Art'];
+const EN_FILTERS = ['Paintings & Drawings', 'Shows', '3D Art'];
 
 // the footer sitemap repeats the tab links, so tab assertions must be
 // scoped to the top tab bar (the first nav on the page)
@@ -55,11 +55,11 @@ test.describe('home page', () => {
     page,
   }) => {
     await page.goto('/en');
-    await tabBar(page).getByRole('link', { name: 'Art Repro' }).click();
+    await tabBar(page).getByRole('link', { name: 'Paintings & Drawings' }).click();
 
-    await expect(page).toHaveURL(/\/en\/paintings$/);
+    await expect(page).toHaveURL(/\/en\/paintings-drawings$/);
     await expect(
-      tabBar(page).getByRole('link', { name: 'Art Repro' }),
+      tabBar(page).getByRole('link', { name: 'Paintings & Drawings' }),
     ).toHaveAttribute('aria-current', 'page');
 
     // logo returns to the full landing view
@@ -70,7 +70,7 @@ test.describe('home page', () => {
   test('every category route loads directly and shows items or empty state', async ({
     page,
   }) => {
-    for (const path of ['paintings', 'gallery-pictures', '3d-sculpture']) {
+    for (const path of ['paintings-drawings', 'shows', '3d-art']) {
       await page.goto(`/en/${path}`);
       const figures = page.locator('figure');
       const emptyState = page.getByText('No pieces in this category yet.');
@@ -81,7 +81,7 @@ test.describe('home page', () => {
   test('lightbox opens and navigates with keys when a category has 2+ images', async ({
     page,
   }) => {
-    await page.goto('/en/paintings');
+    await page.goto('/en/paintings-drawings');
     const figures = page.locator('figure');
     // needs at least two published paintings to exercise navigation
     test.skip((await figures.count()) < 2, 'not enough images in dataset');
@@ -112,7 +112,7 @@ test.describe('home page', () => {
     await expect(page).toHaveURL(/\/he$/);
     await expect(page.locator('html')).toHaveAttribute('dir', 'rtl');
     await expect(
-      tabBar(page).getByRole('link', { name: 'ציורים' }),
+      tabBar(page).getByRole('link', { name: 'ציורים ותמונות' }),
     ).toBeVisible();
 
     await page
@@ -122,7 +122,7 @@ test.describe('home page', () => {
     await expect(page).toHaveURL(/\/en$/);
     await expect(page.locator('html')).toHaveAttribute('dir', 'ltr');
     await expect(
-      tabBar(page).getByRole('link', { name: 'Art Repro' }),
+      tabBar(page).getByRole('link', { name: 'Paintings & Drawings' }),
     ).toBeVisible();
   });
 
@@ -135,12 +135,12 @@ test.describe('home page', () => {
     // options live in the drawer, which sits off-screen until the
     // hamburger opens it (so toBeHidden doesn't apply; check the viewport)
     await expect(
-      tabBar(page).getByRole('link', { name: 'Art Repro' }),
+      tabBar(page).getByRole('link', { name: 'Paintings & Drawings' }),
     ).not.toBeInViewport();
 
     await page.getByRole('button', { name: 'Menu', exact: true }).click();
     await expect(
-      tabBar(page).getByRole('link', { name: 'Art Repro' }),
+      tabBar(page).getByRole('link', { name: 'Paintings & Drawings' }),
     ).toBeInViewport();
     await tabBar(page).getByRole('link', { name: 'Contact' }).click();
     await expect(page).toHaveURL(/\/en\/contact$/);
@@ -160,15 +160,15 @@ test.describe('home page', () => {
   });
 
   test('active tab survives a locale switch', async ({ page }) => {
-    await page.goto('/en/paintings');
+    await page.goto('/en/paintings-drawings');
 
     await page
       .getByRole('button', { name: 'עברית' })
       .filter({ visible: true })
       .click();
-    await expect(page).toHaveURL(/\/he\/paintings$/);
+    await expect(page).toHaveURL(/\/he\/paintings-drawings$/);
     await expect(
-      tabBar(page).getByRole('link', { name: 'ציורים' }),
+      tabBar(page).getByRole('link', { name: 'ציורים ותמונות' }),
     ).toHaveAttribute('aria-current', 'page');
   });
 
