@@ -34,18 +34,20 @@ export const CATEGORY_SLUGS: Record<Category, string> = {
   'gallery-pictures': 'shows',
 };
 
-export type FilterValue = Category | 'all' | 'contact';
+export type FilterValue = Category | 'all' | 'about' | 'contact';
 
 // tab order in the nav; also the set of valid /[locale]/<segment> routes
 export const FILTER_VALUES: FilterValue[] = [
   'all',
   ...CATEGORY_VALUES,
+  'about',
   'contact',
 ];
 
 // URL slug for every filter that isn't 'all' (which has no segment of its own)
 export const FILTER_SLUGS: Record<Exclude<FilterValue, 'all'>, string> = {
   ...CATEGORY_SLUGS,
+  about: 'about',
   contact: 'contact',
 };
 
@@ -74,4 +76,5 @@ export type HeroImage = SanityImageSource & {
 
 export interface SiteSettings {
   heroImages?: HeroImage[];
+  aboutImage?: HeroImage;
 }

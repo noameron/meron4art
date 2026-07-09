@@ -16,6 +16,13 @@ export const siteSettings = defineType({
       of: [{ type: 'image', options: { hotspot: true } }],
       options: { layout: 'grid' },
     }),
+    defineField({
+      name: 'aboutImage',
+      title: 'About Photo',
+      description: 'Portrait photo shown alongside the bio on the About tab.',
+      type: 'image',
+      options: { hotspot: true },
+    }),
   ],
   preview: {
     prepare: () => ({ title: 'Site Settings' }),

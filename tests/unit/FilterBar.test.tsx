@@ -33,9 +33,15 @@ function renderFilterBar(
 }
 
 describe('FilterBar', () => {
-  it('renders the categories and Contact as links, but no All tab', () => {
+  it('renders the categories, About, and Contact as links, but no All tab', () => {
     renderFilterBar();
-    for (const name of ['Paintings & Drawings', '3D Art', 'Shows', 'Contact']) {
+    for (const name of [
+      'Paintings & Drawings',
+      '3D Art',
+      'Shows',
+      'About',
+      'Contact',
+    ]) {
       expect(screen.getAllByRole('link', { name }).length).toBeGreaterThan(0);
     }
     expect(screen.queryByRole('link', { name: 'All' })).not.toBeInTheDocument();

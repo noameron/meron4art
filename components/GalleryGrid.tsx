@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Image from 'next/image';
 import { useLocale, useTranslations } from 'next-intl';
 import { urlFor } from '@/sanity/lib/image';
-import type { FilterValue, PortfolioItem } from '@/sanity/lib/types';
+import type { FilterValue, HeroImage, PortfolioItem } from '@/sanity/lib/types';
 import FilterBar from './FilterBar';
 import ContactForm from './ContactForm';
 import { CONTACT } from './contactInfo';
@@ -73,13 +73,13 @@ function Caption({
 export default function GalleryGrid({
   items,
   active,
-  intro,
   banner,
+  aboutImage,
 }: {
   items: PortfolioItem[];
   active: FilterValue;
-  intro?: React.ReactNode;
   banner?: React.ReactNode;
+  aboutImage?: HeroImage;
 }) {
   // index of the image open in the lightbox (null = closed)
   const [lightbox, setLightbox] = useState<number | null>(null);
@@ -167,6 +167,7 @@ export default function GalleryGrid({
   }, [zoomed, applyPan]);
   const locale = useLocale() as 'en' | 'he';
   const t = useTranslations('Gallery');
+  const tAbout = useTranslations('About');
   const tContact = useTranslations('Contact');
 
   const contentRef = useRef<HTMLDivElement>(null);
@@ -192,7 +193,7 @@ export default function GalleryGrid({
 
   const filtered = useMemo(
     () =>
-      active === 'all' || active === 'contact'
+      active === 'all' || active === 'about' || active === 'contact'
         ? items
         : items.filter((item) => item.category === active),
     [items, active],
@@ -267,20 +268,40 @@ export default function GalleryGrid({
   return (
     <section>
       <FilterBar active={active} />
-      {/* Intro pins below the sticky tab bar; the banner+gallery block below
-          is opaque and stacked higher, so it slides over the text on scroll
-          while both stay under the bar. */}
-      <div className="sticky top-[4.5rem] z-0">{intro}</div>
       <div className="relative z-10 bg-white">
-        <div>{banner}</div>
+        {/* the About tab shows its own photo instead of the site hero;
+            the home tab gets a narrow breathing gap above/below the hero,
+            other tabs keep it flush since the 25vh gap below already
+            separates it from their content */}
+        {active !== 'about' && (
+          <div className={active === 'all' ? 'py-4 sm:py-6' : undefined}>
+            {banner}
+          </div>
+        )}
         {/* modest blank gap that separates the hero from the content below */}
-        {active !== 'all' && <div aria-hidden className="h-[25vh]" />}
+        {active !== 'all' && active !== 'about' && (
+          <div aria-hidden className="h-[25vh]" />
+        )}
         <div ref={contentRef} className="scroll-mt-[4.5rem]">
-          {active === 'all' ? null : active === 'contact' ? (
-            <div className="mx-auto flex max-w-3xl flex-col px-6 py-16">
-              <p className="mb-10 max-w-2xl text-base leading-relaxed font-light text-neutral-600">
-                {tContact('intro')}
+          {active === 'all' ? null : active === 'about' ? (
+            <div className="mx-auto flex max-w-3xl flex-col items-center px-6 py-16 text-center">
+              {aboutImage && (
+                <Image
+                  src={urlFor(aboutImage).width(800).auto('format').url()}
+                  alt=""
+                  width={aboutImage.imgWidth ?? 800}
+                  height={aboutImage.imgHeight ?? 1000}
+                  draggable={false}
+                  onContextMenu={(e) => e.preventDefault()}
+                  className="no-save mb-10 h-auto max-h-96 w-auto max-w-full border border-neutral-200 bg-white p-1.5 shadow-sm"
+                />
+              )}
+              <p className="text-base leading-relaxed font-light text-neutral-600 sm:text-lg">
+                {tAbout('bio')}
               </p>
+            </div>
+          ) : active === 'contact' ? (
+            <div className="mx-auto flex max-w-3xl flex-col px-6 py-16">
               <div className="flex flex-col justify-center gap-10 sm:flex-row sm:gap-16">
                 <div className="flex flex-col gap-2">
                   <h2 className="text-sm font-bold tracking-widest text-neutral-400 uppercase">

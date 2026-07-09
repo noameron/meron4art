@@ -76,13 +76,23 @@ export default function FilterBar({ active }: { active: FilterValue }) {
         href={pathForFilter(option)}
         onClick={() => setOpen(false)}
         aria-current={isActive ? 'page' : undefined}
-        className={`text-sm tracking-wide uppercase transition-colors ${
-          isActive
-            ? 'font-bold text-neutral-900'
-            : 'font-normal text-neutral-400 hover:text-neutral-700'
-        }`}
+        className="group relative inline-flex items-center justify-center px-3 py-1"
       >
-        {t(option)}
+        {/* sharp (unrounded) square outline that grows and fades into
+            place on hover, rather than a solid background fill */}
+        <span
+          aria-hidden
+          className="absolute inset-0 scale-90 border border-neutral-900 opacity-0 transition-all duration-300 ease-out group-hover:scale-100 group-hover:opacity-100"
+        />
+        <span
+          className={`relative text-sm tracking-wide uppercase transition-colors duration-300 group-hover:font-bold group-hover:text-neutral-900 ${
+            isActive
+              ? 'font-bold text-neutral-900'
+              : 'font-normal text-neutral-400'
+          }`}
+        >
+          {t(option)}
+        </span>
       </Link>
     );
   });

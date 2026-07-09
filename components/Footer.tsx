@@ -1,12 +1,15 @@
-import { getTranslations } from 'next-intl/server';
-import { Link } from '@/i18n/navigation';
+'use client';
+
+import { useTranslations } from 'next-intl';
+import { Link, usePathname } from '@/i18n/navigation';
 import { pathForFilter } from '@/sanity/lib/types';
 import { CONTACT } from './contactInfo';
 
 // Site footer, shown below the page content. Light grey (not dark) so the
 // white-background logo blends in.
-export async function Footer({ locale }: { locale: 'en' | 'he' }) {
-  const t = await getTranslations();
+export function Footer({ locale }: { locale: 'en' | 'he' }) {
+  const t = useTranslations();
+  const pathname = usePathname();
   const year = new Date().getFullYear();
 
   // same menu options as the nav; 'Projects' intentionally omitted
@@ -18,6 +21,7 @@ export async function Footer({ locale }: { locale: 'en' | 'he' }) {
       href: pathForFilter('gallery-pictures'),
       label: t('Filters.gallery-pictures'),
     },
+    { href: pathForFilter('about'), label: t('Filters.about') },
     { href: pathForFilter('contact'), label: t('Filters.contact') },
   ];
 
@@ -44,16 +48,24 @@ export async function Footer({ locale }: { locale: 'en' | 'he' }) {
               shrink-wrapped (widest-line) box — visible on mobile RTL where
               "start" is the right edge and short lines looked lopsided */}
           <ul className="mt-4 flex flex-col items-center gap-3 sm:items-start">
-            {links.map((l) => (
-              <li key={l.href}>
-                <Link
-                  href={l.href}
-                  className="text-sm text-neutral-700 transition-colors hover:text-neutral-900"
-                >
-                  {l.label}
-                </Link>
-              </li>
-            ))}
+            {links.map((l) => {
+              const isActive = l.href === pathname;
+              return (
+                <li key={l.href}>
+                  <Link
+                    href={l.href}
+                    aria-current={isActive ? 'page' : undefined}
+                    className={`text-sm transition-colors ${
+                      isActive
+                        ? 'border-b-2 border-neutral-900 font-bold text-neutral-900'
+                        : 'text-neutral-700 hover:text-neutral-900'
+                    }`}
+                  >
+                    {l.label}
+                  </Link>
+                </li>
+              );
+            })}
           </ul>
         </nav>
 

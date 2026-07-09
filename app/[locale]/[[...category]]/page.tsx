@@ -13,7 +13,7 @@ import {
   type SiteSettings,
 } from '@/sanity/lib/types';
 import { routing } from '@/i18n/routing';
-import { HeroIntro, HeroBanner } from '@/components/Hero';
+import { HeroBanner } from '@/components/Hero';
 import GalleryGrid from '@/components/GalleryGrid';
 
 // ISR: re-fetch Sanity content at most once a minute so newly published
@@ -52,8 +52,8 @@ export default async function Home({
       <GalleryGrid
         items={items}
         active={active}
-        intro={<HeroIntro />}
         banner={<HeroBanner heroImages={settings?.heroImages} />}
+        aboutImage={settings?.aboutImage}
       />
     </main>
   );

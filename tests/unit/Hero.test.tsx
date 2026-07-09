@@ -3,16 +3,9 @@ import { act, fireEvent, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { NextIntlClientProvider } from 'next-intl';
 import type { SanityImageSource } from '@sanity/image-url';
-import { HeroIntro, HeroBanner } from '@/components/Hero';
+import { HeroBanner } from '@/components/Hero';
 import en from '@/messages/en.json';
 import type { SiteSettings } from '@/sanity/lib/types';
-
-vi.mock('next-intl/server', () => ({
-  getTranslations: async (namespace: string) => {
-    const table = en[namespace as keyof typeof en] as Record<string, string>;
-    return (key: string) => table[key];
-  },
-}));
 
 // distinguish images by their (test-only) id so we can assert which one is
 // showing after navigation, instead of every image resolving to one URL
@@ -40,11 +33,6 @@ function renderBanner(heroImages: SiteSettings['heroImages']) {
 }
 
 describe('Hero', () => {
-  it('intro renders the bio from messages', async () => {
-    render(await HeroIntro());
-    expect(screen.getByText(en.Hero.bio)).toBeInTheDocument();
-  });
-
   it('banner renders nothing when there are no images', () => {
     const { container } = renderBanner(undefined);
     expect(container).toBeEmptyDOMElement();
