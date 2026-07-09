@@ -94,6 +94,14 @@ describe('GalleryGrid', () => {
     expect(screen.getByText('Roi')).toBeInTheDocument();
   });
 
+  it('shows the bio, centered, on the About tab', () => {
+    renderGrid('about');
+    const bio = screen.getByText(en.About.bio);
+    expect(bio).toBeInTheDocument();
+    expect(bio.parentElement).toHaveClass('text-center');
+    expect(screen.queryAllByRole('figure')).toHaveLength(0);
+  });
+
   it('shows contact details instead of the gallery on the Contact tab', () => {
     renderGrid('contact');
 

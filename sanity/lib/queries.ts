@@ -23,6 +23,11 @@ export const siteSettingsQuery = groq`
       },
       defined(heroImage) => [heroImage],
       []
-    )
+    ),
+    "aboutImage": aboutImage{
+      ...,
+      "imgWidth": asset->metadata.dimensions.width,
+      "imgHeight": asset->metadata.dimensions.height
+    }
   }
 `;

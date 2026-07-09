@@ -172,6 +172,14 @@ test.describe('home page', () => {
     ).toHaveAttribute('aria-current', 'page');
   });
 
+  test('about route shows the bio text', async ({ page }) => {
+    await page.goto('/en/about');
+
+    await expect(
+      page.getByRole('main').getByText('Fine Art and Commercial Photographer', { exact: false }),
+    ).toBeVisible();
+  });
+
   test('contact route shows the contact details with working links', async ({
     page,
   }) => {
