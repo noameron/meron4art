@@ -1,6 +1,7 @@
 {
   "Hero": {
-    "name": "Omri Meron – Fine Art and Commercial Photographer",
+    "nameBold": "Omri Meron",
+    "nameRegular": "Art Repro Photography",
     "bio": "Fine Art and Commercial Photographer, SVA New York graduate. Driven by a deep understanding of an artist's needs and backed by extensive experience with leading clients locally and worldwide",
     "photo": "Photo {number}"
   },

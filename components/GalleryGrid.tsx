@@ -53,7 +53,8 @@ const LastPageIcon = () => (
   </svg>
 );
 
-const PAGE_SIZE = 5;
+const PAGE_SIZE = 10;
+const LIGHTBOX_SWIPE_THRESHOLD_PX = 40;
 
 // Artist name caption, shared by the grid hover overlay and the lightbox.
 function Caption({
@@ -271,7 +272,7 @@ export default function GalleryGrid({
           while both stay under the bar. */}
       <div className="sticky top-[4.5rem] z-0">{intro}</div>
       <div className="relative z-10 bg-white">
-        {banner}
+        <div>{banner}</div>
         {/* modest blank gap that separates the hero from the content below */}
         {active !== 'all' && <div aria-hidden className="h-[25vh]" />}
         <div ref={contentRef} className="scroll-mt-[4.5rem]">
@@ -430,7 +431,7 @@ export default function GalleryGrid({
           </span>
 
           {/* toolbar, top-right: zoom, full screen, close */}
-          <div className="absolute top-3 right-3 flex items-center gap-5 text-white/80">
+          <div className="absolute top-3 right-3 z-10 flex items-center gap-5 text-white/80">
             <button
               type="button"
               aria-label={t('zoom')}
@@ -474,7 +475,7 @@ export default function GalleryGrid({
               e.stopPropagation();
               step(-1);
             }}
-            className="absolute top-1/2 left-2 -translate-y-1/2 p-2 text-white/70 transition-colors hover:text-white sm:left-6"
+            className="absolute top-1/2 left-2 z-10 -translate-y-1/2 p-2 text-white/70 transition-colors hover:text-white sm:left-6"
           >
             <ArrowIcon dir="left" />
           </button>
@@ -485,18 +486,23 @@ export default function GalleryGrid({
               e.stopPropagation();
               step(1);
             }}
-            className="absolute top-1/2 right-2 -translate-y-1/2 p-2 text-white/70 transition-colors hover:text-white sm:right-6"
+            className="absolute top-1/2 right-2 z-10 -translate-y-1/2 p-2 text-white/70 transition-colors hover:text-white sm:right-6"
           >
             <ArrowIcon dir="right" />
           </button>
 
-          {/* image; click toggles zoom, drag the grab-hand to pan when zoomed */}
+          {/* image; a plain tap always zooms in (centered on the tapped
+              point) or, if already zoomed, zooms back out — prev/next is
+              only ever triggered by the arrow buttons or a swipe, never a
+              tap on the image. When zoomed, drag pans instead. Either way
+              a real drag (past the 3px jitter guard) suppresses the tap
+              action. */}
           <div
             ref={panRef}
             className={
               zoomed
                 ? 'flex h-full w-full cursor-grab touch-none items-center justify-center overflow-hidden select-none active:cursor-grabbing'
-                : 'flex max-h-full max-w-full items-center justify-center'
+                : 'flex max-h-full max-w-full touch-pan-y items-center justify-center'
             }
             onClick={(e) => {
               // stop the lightbox backdrop's click-to-close from firing
@@ -506,11 +512,14 @@ export default function GalleryGrid({
               // instead of the <img> — handle the toggle here, not on
               // the image, or a click-to-zoom-out would never fire
               if (drag.current.moved) return;
-              if (zoomed) zoomOut();
-              else zoomInAt(e.clientX, e.clientY);
+              if (zoomed) {
+                zoomOut();
+                return;
+              }
+              zoomInAt(e.clientX, e.clientY);
             }}
             onPointerDown={(e) => {
-              if (!zoomed || !panRef.current) return;
+              if (!panRef.current) return;
               drag.current = {
                 active: true,
                 moved: false,
@@ -527,9 +536,16 @@ export default function GalleryGrid({
               const dy = e.clientY - drag.current.y;
               if (Math.abs(dx) > 3 || Math.abs(dy) > 3)
                 drag.current.moved = true;
-              applyPan(drag.current.px + dx, drag.current.py + dy);
+              if (zoomed) applyPan(drag.current.px + dx, drag.current.py + dy);
             }}
-            onPointerUp={() => {
+            onPointerUp={(e) => {
+              if (!zoomed && drag.current.active) {
+                const dx = e.clientX - drag.current.x;
+                if (Math.abs(dx) >= LIGHTBOX_SWIPE_THRESHOLD_PX) {
+                  if (dx < 0) step(1);
+                  else step(-1);
+                }
+              }
               drag.current.active = false;
             }}
           >

@@ -40,11 +40,8 @@ function renderBanner(heroImages: SiteSettings['heroImages']) {
 }
 
 describe('Hero', () => {
-  it('intro renders the name and bio from messages', async () => {
+  it('intro renders the bio from messages', async () => {
     render(await HeroIntro());
-    expect(
-      screen.getByRole('heading', { level: 1, name: en.Hero.name }),
-    ).toBeInTheDocument();
     expect(screen.getByText(en.Hero.bio)).toBeInTheDocument();
   });
 
@@ -82,7 +79,7 @@ describe('Hero', () => {
       expect(dots[0]).not.toHaveAttribute('aria-current');
     });
 
-    it('auto-advances after 5 seconds and loops back at the end', () => {
+    it('auto-advances after 10 seconds and loops back at the end', () => {
       vi.useFakeTimers();
       renderBanner([image('a'), image('b')]);
 
@@ -90,12 +87,12 @@ describe('Hero', () => {
       expect(dots[0]).toHaveAttribute('aria-current', 'true');
 
       act(() => {
-        vi.advanceTimersByTime(5000);
+        vi.advanceTimersByTime(10000);
       });
       expect(dots[1]).toHaveAttribute('aria-current', 'true');
 
       act(() => {
-        vi.advanceTimersByTime(5000);
+        vi.advanceTimersByTime(10000);
       });
       expect(dots[0]).toHaveAttribute('aria-current', 'true');
     });

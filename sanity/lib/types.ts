@@ -65,6 +65,13 @@ export const pathForFilter = (value: FilterValue) =>
 export const filterForSlug = (segment: string): FilterValue | undefined =>
   SLUG_TO_FILTER[segment];
 
+// intrinsic pixel dimensions travel with each hero photo so the banner can
+// size its frame to match — no letterboxing/pillarboxing regardless of shape
+export type HeroImage = SanityImageSource & {
+  imgWidth?: number;
+  imgHeight?: number;
+};
+
 export interface SiteSettings {
-  heroImages?: SanityImageSource[];
+  heroImages?: HeroImage[];
 }

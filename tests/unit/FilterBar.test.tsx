@@ -75,4 +75,15 @@ describe('FilterBar', () => {
       screen.getAllByRole('link', { name: 'Shows' })[0],
     ).not.toHaveAttribute('aria-current');
   });
+
+  it('shows the brand name next to the logo as the page heading', () => {
+    renderFilterBar();
+    const headings = screen.getAllByRole('heading', { level: 1 });
+    expect(headings.length).toBeGreaterThan(0);
+    expect(headings[0]).toHaveTextContent(en.Hero.nameBold);
+    expect(headings[0]).toHaveTextContent(en.Hero.nameRegular);
+    expect(headings[0].querySelector('.font-bold')).toHaveTextContent(
+      en.Hero.nameBold,
+    );
+  });
 });

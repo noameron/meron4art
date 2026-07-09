@@ -16,7 +16,11 @@ export const allPortfolioItemsQuery = groq`
 export const siteSettingsQuery = groq`
   *[_type == "siteSettings"][0] {
     "heroImages": select(
-      defined(heroImages) && count(heroImages) > 0 => heroImages,
+      defined(heroImages) && count(heroImages) > 0 => heroImages[]{
+        ...,
+        "imgWidth": asset->metadata.dimensions.width,
+        "imgHeight": asset->metadata.dimensions.height
+      },
       defined(heroImage) => [heroImage],
       []
     )
