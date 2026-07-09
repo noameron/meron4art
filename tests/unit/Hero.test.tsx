@@ -1,5 +1,8 @@
-import { describe, expect, it, vi } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { describe, expect, it, vi, afterEach } from 'vitest';
+import { act, fireEvent, render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import { NextIntlClientProvider } from 'next-intl';
+import type { SanityImageSource } from '@sanity/image-url';
 import { HeroIntro, HeroBanner } from '@/components/Hero';
 import en from '@/messages/en.json';
 import type { SiteSettings } from '@/sanity/lib/types';
@@ -11,16 +14,30 @@ vi.mock('next-intl/server', () => ({
   },
 }));
 
+// distinguish images by their (test-only) id so we can assert which one is
+// showing after navigation, instead of every image resolving to one URL
 vi.mock('@/sanity/lib/image', () => ({
-  urlFor: () => {
+  urlFor: (image: { id: string }) => {
     const builder = {
       width: () => builder,
       auto: () => builder,
-      url: () => 'https://cdn.example.test/hero.jpg',
+      url: () => `https://cdn.example.test/${image.id}.jpg`,
     };
     return builder;
   },
 }));
+
+function image(id: string): SanityImageSource {
+  return { _type: 'image', id } as unknown as SanityImageSource;
+}
+
+function renderBanner(heroImages: SiteSettings['heroImages']) {
+  return render(
+    <NextIntlClientProvider locale="en" messages={en}>
+      <HeroBanner heroImages={heroImages} />
+    </NextIntlClientProvider>,
+  );
+}
 
 describe('Hero', () => {
   it('intro renders the name and bio from messages', async () => {
@@ -31,20 +48,69 @@ describe('Hero', () => {
     expect(screen.getByText(en.Hero.bio)).toBeInTheDocument();
   });
 
-  it('banner renders nothing when no image is set', () => {
-    const { container } = render(<HeroBanner heroImage={undefined} />);
+  it('banner renders nothing when there are no images', () => {
+    const { container } = renderBanner(undefined);
     expect(container).toBeEmptyDOMElement();
   });
 
-  it('banner renders the photo when an image is set', () => {
-    const { container } = render(
-      <HeroBanner
-        heroImage={{ _type: 'image' } as SiteSettings['heroImage']}
-      />,
-    );
+  it('banner renders a single photo with no dots', () => {
+    // decorative hero photos use alt="", which is the presentation role,
+    // not "img" — query the raw element instead of by accessible role
+    const { container } = renderBanner([image('a')]);
     expect(container.querySelector('img')).toHaveAttribute(
       'src',
-      'https://cdn.example.test/hero.jpg',
+      'https://cdn.example.test/a.jpg',
     );
+    expect(screen.queryByRole('button')).not.toBeInTheDocument();
+  });
+
+  describe('with multiple photos', () => {
+    afterEach(() => {
+      vi.useRealTimers();
+    });
+
+    it('shows one dot per photo and switches on click', async () => {
+      const user = userEvent.setup();
+      renderBanner([image('a'), image('b'), image('c')]);
+
+      const dots = screen.getAllByRole('button');
+      expect(dots).toHaveLength(3);
+      expect(dots[0]).toHaveAttribute('aria-current', 'true');
+
+      await user.click(dots[2]);
+      expect(dots[2]).toHaveAttribute('aria-current', 'true');
+      expect(dots[0]).not.toHaveAttribute('aria-current');
+    });
+
+    it('auto-advances after 5 seconds and loops back at the end', () => {
+      vi.useFakeTimers();
+      renderBanner([image('a'), image('b')]);
+
+      const dots = screen.getAllByRole('button');
+      expect(dots[0]).toHaveAttribute('aria-current', 'true');
+
+      act(() => {
+        vi.advanceTimersByTime(5000);
+      });
+      expect(dots[1]).toHaveAttribute('aria-current', 'true');
+
+      act(() => {
+        vi.advanceTimersByTime(5000);
+      });
+      expect(dots[0]).toHaveAttribute('aria-current', 'true');
+    });
+
+    it('swipes to the next photo past the drag threshold', () => {
+      const { container } = renderBanner([image('a'), image('b')]);
+      const track = container.querySelector('img')!.parentElement!;
+
+      fireEvent.pointerDown(track, { clientX: 200 });
+      fireEvent.pointerUp(track, { clientX: 120 });
+
+      expect(screen.getAllByRole('button')[1]).toHaveAttribute(
+        'aria-current',
+        'true',
+      );
+    });
   });
 });

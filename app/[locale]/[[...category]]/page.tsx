@@ -51,7 +51,7 @@ export default async function Home({
         items={items}
         active={active}
         intro={<HeroIntro />}
-        banner={<HeroBanner heroImage={settings?.heroImage} />}
+        banner={<HeroBanner heroImages={settings?.heroImages} />}
       />
     </main>
   );

@@ -38,5 +38,5 @@ export const pathForFilter = (value: FilterValue) =>
   value === 'all' ? '/' : `/${value}`;
 
 export interface SiteSettings {
-  heroImage?: SanityImageSource;
+  heroImages?: SanityImageSource[];
 }

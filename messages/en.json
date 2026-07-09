@@ -1,7 +1,8 @@
 {
   "Hero": {
-    "name": "Omri Meron",
-    "bio": "Fine-art reproduction photography for artists and galleries. Gallery-grade digitization of paintings, sculptures, and installations."
+    "name": "Omri Meron – Fine Art and Commercial Photographer",
+    "bio": "Fine Art and Commercial Photographer, SVA New York graduate. Driven by a deep understanding of an artist's needs and backed by extensive experience with leading clients locally and worldwide",
+    "photo": "Photo {number}"
   },
   "Filters": {
     "all": "All",
@@ -17,17 +18,25 @@
     "next": "Next image",
     "zoom": "Zoom",
     "fullscreen": "Full screen",
-    "share": "Share",
-    "close": "Close"
+    "close": "Close",
+    "pagination": {
+      "first": "First page",
+      "previous": "Previous page",
+      "next": "Next page",
+      "last": "Last page",
+      "status": "Page {current} of {total}"
+    }
   },
   "Footer": {
     "home": "Home",
     "sitemap": "Sitemap",
     "contact": "Contact",
     "tagline": "Fine-art reproduction photography for artists and galleries.",
-    "rights": "All rights reserved"
+    "rights": "All rights reserved",
+    "copyrightNotice": "© All rights to the artworks, paintings, and designs displayed on this website belong exclusively to their respective artists and original copyright owners. Photography and media rights are reserved by Omri Meron. Any use, download, or distribution of the materials on this site without explicit consent is strictly prohibited."
   },
   "Contact": {
+    "intro": "I offer precise and meticulous artwork reproduction photography (at my Tel Aviv studio or on-site at your location). The process utilizes tethered shooting directly to a computer for real-time viewing, and includes final digital retouching and cleaning to ensure absolute fidelity to the original piece.",
     "details": "Details",
     "email": "Email",
     "phone": "Phone",

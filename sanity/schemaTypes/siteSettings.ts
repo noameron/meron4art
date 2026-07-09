@@ -8,11 +8,13 @@ export const siteSettings = defineType({
   type: 'document',
   fields: [
     defineField({
-      name: 'heroImage',
-      title: 'Hero Photograph',
-      description: 'Full-bleed image shown at the top of the home page.',
-      type: 'image',
-      options: { hotspot: true },
+      name: 'heroImages',
+      title: 'Hero Photographs',
+      description:
+        'Full-bleed image(s) shown at the top of the home page. Add more than one to show an auto-advancing gallery (5s per photo, with dots and swipe to change manually).',
+      type: 'array',
+      of: [{ type: 'image', options: { hotspot: true } }],
+      options: { layout: 'grid' },
     }),
   ],
   preview: {

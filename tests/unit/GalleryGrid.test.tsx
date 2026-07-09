@@ -1,6 +1,6 @@
 import { createElement } from 'react';
 import { describe, expect, it, vi } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { act, fireEvent, render, screen } from '@testing-library/react';
 import { NextIntlClientProvider } from 'next-intl';
 import GalleryGrid from '@/components/GalleryGrid';
 import type { FilterValue, PortfolioItem } from '@/sanity/lib/types';
@@ -115,5 +115,94 @@ describe('GalleryGrid', () => {
     const figure = screen.getByRole('figure');
     // no name → no hover overlay (identified by its white blur wash)
     expect(figure.querySelector('.backdrop-blur-md')).toBeNull();
+  });
+});
+
+describe('GalleryGrid pagination', () => {
+  const paintings: PortfolioItem[] = Array.from({ length: 6 }, (_, i) =>
+    item({
+      _id: `page-${i}`,
+      category: 'paintings',
+      artistName: { en: `Artist ${i}`, he: `אמן ${i}` },
+    }),
+  );
+
+  it('shows at most 5 images on the first page', () => {
+    renderGrid('paintings', paintings);
+    expect(screen.getAllByRole('figure')).toHaveLength(5);
+    expect(screen.getByText('Artist 0')).toBeInTheDocument();
+    expect(screen.queryByText('Artist 5')).not.toBeInTheDocument();
+  });
+
+  it('hides pagination controls when a category has 5 or fewer items', () => {
+    renderGrid('paintings');
+    expect(
+      screen.queryByRole('button', { name: 'Next page' }),
+    ).not.toBeInTheDocument();
+  });
+
+  it('disables first/previous on the first page, next/last on the last page', () => {
+    renderGrid('paintings', paintings);
+    expect(screen.getByRole('button', { name: 'First page' })).toBeDisabled();
+    expect(
+      screen.getByRole('button', { name: 'Previous page' }),
+    ).toBeDisabled();
+    expect(
+      screen.getByRole('button', { name: 'Next page' }),
+    ).not.toBeDisabled();
+    expect(
+      screen.getByRole('button', { name: 'Last page' }),
+    ).not.toBeDisabled();
+  });
+
+  it('advances to the next page and back after the crossfade', () => {
+    vi.useFakeTimers();
+    renderGrid('paintings', paintings);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Next page' }));
+    act(() => {
+      vi.advanceTimersByTime(400);
+    });
+
+    expect(screen.getByText('Artist 5')).toBeInTheDocument();
+    expect(screen.queryByText('Artist 0')).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Next page' })).toBeDisabled();
+
+    fireEvent.click(screen.getByRole('button', { name: 'First page' }));
+    act(() => {
+      vi.advanceTimersByTime(400);
+    });
+
+    expect(screen.getByText('Artist 0')).toBeInTheDocument();
+    vi.useRealTimers();
+  });
+
+  it('resets to page 1 when the active category changes', () => {
+    vi.useFakeTimers();
+    const { rerender } = render(
+      <NextIntlClientProvider locale="en" messages={en}>
+        <GalleryGrid items={paintings} active="paintings" />
+      </NextIntlClientProvider>,
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: 'Last page' }));
+    act(() => {
+      vi.advanceTimersByTime(400);
+    });
+    expect(screen.getByText('Artist 5')).toBeInTheDocument();
+
+    rerender(
+      <NextIntlClientProvider locale="en" messages={en}>
+        <GalleryGrid items={paintings} active="gallery-pictures" />
+      </NextIntlClientProvider>,
+    );
+    rerender(
+      <NextIntlClientProvider locale="en" messages={en}>
+        <GalleryGrid items={paintings} active="paintings" />
+      </NextIntlClientProvider>,
+    );
+
+    expect(screen.getByText('Artist 0')).toBeInTheDocument();
+    vi.useRealTimers();
   });
 });
