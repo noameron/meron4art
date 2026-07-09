@@ -6,8 +6,9 @@ import {
   siteSettingsQuery,
 } from '@/sanity/lib/queries';
 import {
+  FILTER_SLUGS,
   FILTER_VALUES,
-  type FilterValue,
+  filterForSlug,
   type PortfolioItem,
   type SiteSettings,
 } from '@/sanity/lib/types';
@@ -19,12 +20,12 @@ import GalleryGrid from '@/components/GalleryGrid';
 // artwork appears without a manual redeploy.
 export const revalidate = 60;
 
-// Pre-render every locale × tab: /en, /en/paintings, ... /he/contact
+// Pre-render every locale × tab: /en, /en/paintings-drawings, ... /he/contact
 export function generateStaticParams() {
   return routing.locales.flatMap((locale) =>
     FILTER_VALUES.map((value) => ({
       locale,
-      category: value === 'all' ? [] : [value],
+      category: value === 'all' ? [] : [FILTER_SLUGS[value]],
     })),
   );
 }
@@ -37,8 +38,9 @@ export default async function Home({
   const { locale, category } = await params;
   setRequestLocale(locale);
 
-  const active = (category?.[0] ?? 'all') as FilterValue;
-  if (!FILTER_VALUES.includes(active)) notFound();
+  const segment = category?.[0];
+  const active = segment === undefined ? 'all' : filterForSlug(segment);
+  if (!active) notFound();
 
   const [items, settings] = await Promise.all([
     client.fetch<PortfolioItem[]>(allPortfolioItemsQuery),

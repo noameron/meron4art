@@ -6,6 +6,7 @@ import { dataset, projectId } from './sanity/env';
 import { schemaTypes } from './sanity/schemaTypes';
 import { structure } from './sanity/structure';
 import { ReorderTool } from './sanity/tools/ReorderTool';
+import { BulkUploadTool } from './sanity/tools/BulkUploadTool';
 
 export default defineConfig({
   basePath: '/studio',
@@ -15,6 +16,12 @@ export default defineConfig({
   plugins: [structureTool({ structure })],
   tools: (prev) => [
     ...prev,
+    {
+      name: 'bulk-upload',
+      title: 'Bulk Upload',
+      icon: () => createElement(icons.upload),
+      component: BulkUploadTool,
+    },
     {
       name: 'reorder',
       title: 'Reorder Portfolio',

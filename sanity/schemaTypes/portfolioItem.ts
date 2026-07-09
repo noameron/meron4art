@@ -1,4 +1,7 @@
 import { defineField, defineType } from 'sanity';
+// Category labels shown in the Studio dropdown/tabs are sourced from the
+// same file as the site's nav headlines, so the two can't drift apart.
+import en from '@/messages/en.json';
 
 // Reusable localized string: renders as EN / HE tabs in the Studio
 export const localizedString = defineType({
@@ -31,9 +34,9 @@ export const localizedString = defineType({
 });
 
 export const CATEGORIES = [
-  { title: 'Pure Paintings', value: 'paintings' },
-  { title: 'Pictures from Galleries', value: 'gallery-pictures' },
-  { title: '3D Arts, Sculptures etc.', value: '3d-sculpture' },
+  { title: en.Filters.paintings, value: 'paintings' },
+  { title: en.Filters['gallery-pictures'], value: 'gallery-pictures' },
+  { title: en.Filters['3d-sculpture'], value: '3d-sculpture' },
 ] as const;
 
 export const portfolioItem = defineType({

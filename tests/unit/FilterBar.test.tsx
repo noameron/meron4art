@@ -35,7 +35,7 @@ function renderFilterBar(
 describe('FilterBar', () => {
   it('renders the categories and Contact as links, but no All tab', () => {
     renderFilterBar();
-    for (const name of ['Art Repro', '3D Art', 'Shows', 'Contact']) {
+    for (const name of ['Paintings & Drawings', '3D Art', 'Shows', 'Contact']) {
       expect(screen.getAllByRole('link', { name }).length).toBeGreaterThan(0);
     }
     expect(screen.queryByRole('link', { name: 'All' })).not.toBeInTheDocument();
@@ -48,8 +48,8 @@ describe('FilterBar', () => {
       '/',
     );
     expect(
-      screen.getAllByRole('link', { name: 'Art Repro' })[0],
-    ).toHaveAttribute('href', '/paintings');
+      screen.getAllByRole('link', { name: 'Paintings & Drawings' })[0],
+    ).toHaveAttribute('href', '/paintings-drawings');
     expect(screen.getAllByRole('link', { name: 'Contact' })[0]).toHaveAttribute(
       'href',
       '/contact',
@@ -59,7 +59,7 @@ describe('FilterBar', () => {
   it('renders Hebrew category labels under the he locale', () => {
     renderFilterBar('all', 'he');
     expect(
-      screen.getAllByRole('link', { name: 'ציורים' }).length,
+      screen.getAllByRole('link', { name: 'ציורים ותמונות' }).length,
     ).toBeGreaterThan(0);
     expect(
       screen.getAllByRole('link', { name: 'צור קשר' }).length,
@@ -69,7 +69,7 @@ describe('FilterBar', () => {
   it('marks only the active tab with aria-current', () => {
     renderFilterBar('paintings');
     expect(
-      screen.getAllByRole('link', { name: 'Art Repro' })[0],
+      screen.getAllByRole('link', { name: 'Paintings & Drawings' })[0],
     ).toHaveAttribute('aria-current', 'page');
     expect(
       screen.getAllByRole('link', { name: 'Shows' })[0],

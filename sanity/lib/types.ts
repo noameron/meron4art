@@ -24,6 +24,16 @@ export const CATEGORY_VALUES: Category[] = [
   'gallery-pictures',
 ];
 
+// Public-facing URL slug for each category, kept separate from the Category
+// value itself (which is also what's stored in each Sanity document's
+// `category` field) — so a headline/URL wording change never requires a
+// content migration.
+export const CATEGORY_SLUGS: Record<Category, string> = {
+  paintings: 'paintings-drawings',
+  '3d-sculpture': '3d-art',
+  'gallery-pictures': 'shows',
+};
+
 export type FilterValue = Category | 'all' | 'contact';
 
 // tab order in the nav; also the set of valid /[locale]/<segment> routes
@@ -33,9 +43,27 @@ export const FILTER_VALUES: FilterValue[] = [
   'contact',
 ];
 
-// 'all' is the bare locale route (/en); others are /en/<value>
+// URL slug for every filter that isn't 'all' (which has no segment of its own)
+export const FILTER_SLUGS: Record<Exclude<FilterValue, 'all'>, string> = {
+  ...CATEGORY_SLUGS,
+  contact: 'contact',
+};
+
+const SLUG_TO_FILTER: Record<string, FilterValue> = Object.fromEntries(
+  (Object.keys(FILTER_SLUGS) as Exclude<FilterValue, 'all'>[]).map((value) => [
+    FILTER_SLUGS[value],
+    value,
+  ]),
+);
+
+// 'all' is the bare locale route (/en); others are /en/<slug>
 export const pathForFilter = (value: FilterValue) =>
-  value === 'all' ? '/' : `/${value}`;
+  value === 'all' ? '/' : `/${FILTER_SLUGS[value]}`;
+
+// reverse of pathForFilter: turns a URL segment back into the internal
+// filter identifier, or undefined if it doesn't match any known route
+export const filterForSlug = (segment: string): FilterValue | undefined =>
+  SLUG_TO_FILTER[segment];
 
 export interface SiteSettings {
   heroImages?: SanityImageSource[];
