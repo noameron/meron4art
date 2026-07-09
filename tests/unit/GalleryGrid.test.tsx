@@ -97,7 +97,11 @@ describe('GalleryGrid', () => {
   it('shows contact details instead of the gallery on the Contact tab', () => {
     renderGrid('contact');
 
-    expect(screen.getByText('Omri Meron')).toBeInTheDocument();
+    // the nav's brand name also renders "Omri Meron" (bold span), so scope
+    // to the contact details' own styling to find the right one
+    expect(
+      screen.getByText('Omri Meron', { selector: '.text-lg' }),
+    ).toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'Email' })).toHaveAttribute(
       'href',
       expect.stringMatching(/^mailto:.+@.+/),
@@ -119,7 +123,7 @@ describe('GalleryGrid', () => {
 });
 
 describe('GalleryGrid pagination', () => {
-  const paintings: PortfolioItem[] = Array.from({ length: 6 }, (_, i) =>
+  const paintings: PortfolioItem[] = Array.from({ length: 11 }, (_, i) =>
     item({
       _id: `page-${i}`,
       category: 'paintings',
@@ -127,14 +131,14 @@ describe('GalleryGrid pagination', () => {
     }),
   );
 
-  it('shows at most 5 images on the first page', () => {
+  it('shows at most 10 images on the first page', () => {
     renderGrid('paintings', paintings);
-    expect(screen.getAllByRole('figure')).toHaveLength(5);
+    expect(screen.getAllByRole('figure')).toHaveLength(10);
     expect(screen.getByText('Artist 0')).toBeInTheDocument();
-    expect(screen.queryByText('Artist 5')).not.toBeInTheDocument();
+    expect(screen.queryByText('Artist 10')).not.toBeInTheDocument();
   });
 
-  it('hides pagination controls when a category has 5 or fewer items', () => {
+  it('hides pagination controls when a category has 10 or fewer items', () => {
     renderGrid('paintings');
     expect(
       screen.queryByRole('button', { name: 'Next page' }),
@@ -164,7 +168,7 @@ describe('GalleryGrid pagination', () => {
       vi.advanceTimersByTime(400);
     });
 
-    expect(screen.getByText('Artist 5')).toBeInTheDocument();
+    expect(screen.getByText('Artist 10')).toBeInTheDocument();
     expect(screen.queryByText('Artist 0')).not.toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Next page' })).toBeDisabled();
 
@@ -189,7 +193,7 @@ describe('GalleryGrid pagination', () => {
     act(() => {
       vi.advanceTimersByTime(400);
     });
-    expect(screen.getByText('Artist 5')).toBeInTheDocument();
+    expect(screen.getByText('Artist 10')).toBeInTheDocument();
 
     rerender(
       <NextIntlClientProvider locale="en" messages={en}>

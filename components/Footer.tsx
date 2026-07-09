@@ -36,10 +36,14 @@ export async function Footer({ locale }: { locale: 'en' | 'he' }) {
 
         {/* sitemap */}
         <nav aria-label={t('Footer.sitemap')}>
-          <h2 className="text-sm font-bold tracking-widest text-neutral-400 uppercase">
+          <h2 className="text-center text-sm font-bold tracking-widest text-neutral-400 uppercase sm:text-start">
             {t('Footer.sitemap')}
           </h2>
-          <ul className="mt-4 flex flex-col items-start gap-3">
+          {/* items-center (not items-start) so each line centers on its own
+              width instead of all lines hugging one edge of the column's
+              shrink-wrapped (widest-line) box — visible on mobile RTL where
+              "start" is the right edge and short lines looked lopsided */}
+          <ul className="mt-4 flex flex-col items-center gap-3 sm:items-start">
             {links.map((l) => (
               <li key={l.href}>
                 <Link
@@ -55,10 +59,10 @@ export async function Footer({ locale }: { locale: 'en' | 'he' }) {
 
         {/* contact */}
         <div>
-          <h2 className="text-sm font-bold tracking-widest text-neutral-400 uppercase">
+          <h2 className="text-center text-sm font-bold tracking-widest text-neutral-400 uppercase sm:text-start">
             {t('Footer.contact')}
           </h2>
-          <div className="mt-4 flex flex-col items-start gap-2 text-sm">
+          <div className="mt-4 flex flex-col items-center gap-2 text-sm sm:items-start">
             <span className="text-neutral-700">{CONTACT.name[locale]}</span>
             <a
               href={`mailto:${CONTACT.email}`}

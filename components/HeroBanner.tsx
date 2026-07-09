@@ -6,8 +6,18 @@ import { useTranslations } from 'next-intl';
 import { urlFor } from '@/sanity/lib/image';
 import type { SiteSettings } from '@/sanity/lib/types';
 
-const AUTOPLAY_MS = 5000;
+const AUTOPLAY_MS = 10000;
 const SWIPE_THRESHOLD_PX = 40;
+// used when a photo's dimensions aren't available (the legacy single-image
+// fallback doesn't carry them) or before any photo has loaded
+const DEFAULT_ASPECT_RATIO = 4 / 5;
+// cap on how tall the banner can get, expressed as vh — a landscape photo
+// at full viewport width can otherwise dwarf a short/wide browser window
+// and push the dots off screen. Capped by shrinking width (and centering),
+// never by clamping height directly, or the box would stop matching the
+// photo's own ratio and reintroduce the letterbox gaps this is meant to
+// avoid.
+const MAX_HEIGHT_VH = 70;
 
 // separate client component: onContextMenu is a function prop, which can't
 // cross the server/client boundary from a plain server component into
@@ -41,12 +51,27 @@ export function HeroBanner({
 
   if (images.length === 0) return null;
 
+  // match the frame to the current photo's own aspect ratio so it always
+  // fills edge to edge — a fixed ratio left gaps (the container's fallback
+  // background showing through) for any photo shaped differently from it.
+  const current = images[index];
+  const ratio =
+    current?.imgWidth && current?.imgHeight
+      ? current.imgWidth / current.imgHeight
+      : DEFAULT_ASPECT_RATIO;
+
   return (
     <div
-      className={`relative aspect-[4/5] w-full touch-pan-y overflow-hidden bg-neutral-100 sm:aspect-[16/9] ${
-        images.length > 1 ? 'cursor-grab active:cursor-grabbing' : ''
-      }`}
+      className="relative mx-auto touch-pan-y overflow-hidden bg-neutral-100 transition-[aspect-ratio,width] duration-700"
+      style={{
+        aspectRatio: `${ratio}`,
+        width: `min(100%, calc(${MAX_HEIGHT_VH}vh * ${ratio}))`,
+        minHeight: '220px',
+      }}
       onPointerDown={(e) => {
+        // don't hijack pointer capture from the dot buttons, or their
+        // click events get retargeted to this container and never fire
+        if ((e.target as HTMLElement).closest('button')) return;
         dragStart.current = e.clientX;
         e.currentTarget.setPointerCapture?.(e.pointerId);
       }}
@@ -69,7 +94,7 @@ export function HeroBanner({
           sizes="100vw"
           draggable={false}
           onContextMenu={(e) => e.preventDefault()}
-          className={`no-save object-cover transition-opacity duration-700 ${
+          className={`no-save object-contain transition-opacity duration-700 ${
             i === index ? 'opacity-100' : 'pointer-events-none opacity-0'
           }`}
         />

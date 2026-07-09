@@ -15,7 +15,7 @@ export function Logo({ className }: { className: string }) {
   const locale = useLocale();
   return locale === 'he' ? (
     <Image
-      src="/heb_logo.jpeg"
+      src="/heb_logo-v2.jpeg"
       alt="Studio Omri Meron"
       width={646}
       height={358}
@@ -23,12 +23,33 @@ export function Logo({ className }: { className: string }) {
     />
   ) : (
     <Image
-      src="/english_logo.jpeg"
+      src="/english_logo-v2.jpeg"
       alt="Studio Omri Meron"
       width={755}
       height={341}
       className={className}
     />
+  );
+}
+
+// site name next to the logo — the page's only heading now that the hero
+// no longer carries one, so it's an h1 in the nav rows (mobile bar / desktop
+// bar are mutually exclusive via breakpoint, never both visible at once).
+// The drawer repeats the same text as plain copy, not another h1, since it
+// can be open at the same time as the mobile bar.
+function BrandName({ as: Tag = 'h1' }: { as?: 'h1' | 'p' }) {
+  const t = useTranslations('Hero');
+  return (
+    <Tag className="font-display text-base leading-tight tracking-tight text-neutral-900 sm:text-lg">
+      {/* nowrap so a short phrase never splits mid-word (e.g. "Omri" alone
+          on its own line) — the regular part only joins at xl+; the 3-column
+          nav (brand | tabs | locale) switches on at lg but doesn't have room
+          for the full phrase until xl, or it squeezes into the tabs */}
+      <span className="font-bold whitespace-nowrap">{t('nameBold')}</span>
+      <span className="ms-2 hidden font-normal whitespace-nowrap xl:inline">
+        {t('nameRegular')}
+      </span>
+    </Tag>
   );
 }
 
@@ -73,9 +94,15 @@ export default function FilterBar({ active }: { active: FilterValue }) {
           absolute positioning (not flex start/end) so it stays in the same
           corner in both languages instead of mirroring with dir=rtl; pr-24
           on the row reserves that corner so the logo never grows under it. */}
-      <div className="relative flex items-center py-4 pr-24 pl-6 sm:hidden">
-        <Link href="/" aria-label="Home" onClick={() => setOpen(false)}>
+      <div className="relative flex items-center py-4 pr-24 pl-6 lg:hidden">
+        <Link
+          href="/"
+          aria-label="Home"
+          onClick={() => setOpen(false)}
+          className="flex items-center gap-2"
+        >
           <Logo className="h-6 w-auto" />
+          <BrandName />
         </Link>
         <div className="absolute top-1/2 right-4 flex -translate-y-1/2 items-center gap-4">
           <LocaleSwitcher />
@@ -95,7 +122,7 @@ export default function FilterBar({ active }: { active: FilterValue }) {
       <div
         aria-hidden={!open}
         onClick={() => setOpen(false)}
-        className={`fixed inset-0 z-40 bg-black/40 transition-opacity duration-300 sm:hidden ${
+        className={`fixed inset-0 z-40 bg-black/40 transition-opacity duration-300 lg:hidden ${
           open ? 'opacity-100' : 'pointer-events-none opacity-0'
         }`}
       />
@@ -103,7 +130,7 @@ export default function FilterBar({ active }: { active: FilterValue }) {
         // closed drawer is only translated off-screen, so inert keeps its
         // links out of the tab order and the accessibility tree
         inert={!open}
-        className={`fixed inset-y-0 z-50 flex w-4/5 max-w-xs flex-col gap-8 bg-white px-6 py-6 shadow-xl transition-transform duration-300 ease-in-out sm:hidden ${
+        className={`fixed inset-y-0 z-50 flex w-4/5 max-w-xs flex-col gap-8 bg-white px-6 py-6 shadow-xl transition-transform duration-300 ease-in-out lg:hidden ${
           rtl ? 'left-0' : 'right-0'
         } ${
           open
@@ -114,8 +141,14 @@ export default function FilterBar({ active }: { active: FilterValue }) {
         }`}
       >
         <div className="flex items-center justify-between">
-          <Link href="/" aria-label="Home" onClick={() => setOpen(false)}>
+          <Link
+            href="/"
+            aria-label="Home"
+            onClick={() => setOpen(false)}
+            className="flex items-center gap-2"
+          >
             <Logo className="h-6 w-auto" />
+            <BrandName as="p" />
           </Link>
           <button
             type="button"
@@ -128,14 +161,29 @@ export default function FilterBar({ active }: { active: FilterValue }) {
         </div>
         <div className="flex flex-col items-start gap-5">{tabLinks}</div>
       </div>
-      {/* desktop: logo + options in one row. Same physical-right pin as the
-          mobile bar above; pr-20/sm:pr-24 keeps tabs from wrapping under it. */}
-      <div className="relative hidden flex-wrap items-center gap-x-6 gap-y-2 py-6 pr-20 pl-6 sm:flex sm:pr-24 sm:pl-12">
-        <Link href="/" aria-label="Home" onClick={() => setOpen(false)}>
+      {/* desktop: brand and locale are both taken out of flow (absolute)
+          so the tabs can center on the *true* full bar width via a plain
+          w-full flex, instead of the space left over after two differently-
+          sized, asymmetric siblings — that leftover space isn't symmetric
+          (brand's width varies with locale/text length, the locale switcher
+          is a fixed small icon), so centering within it was visibly off.
+          Both corners use logical `start-*`/`end-*` (not physical left/right)
+          so they mirror together with content in Hebrew — brand and locale
+          swap sides as a pair, so they never land on the same corner. */}
+      <div className="relative hidden items-center py-6 lg:flex">
+        <Link
+          href="/"
+          aria-label="Home"
+          onClick={() => setOpen(false)}
+          className="absolute top-1/2 start-6 flex -translate-y-1/2 items-center gap-3 lg:start-12"
+        >
           <Logo className="h-6 w-auto" />
+          <BrandName />
         </Link>
-        {tabLinks}
-        <div className="absolute top-1/2 right-6 -translate-y-1/2 sm:right-12">
+        <div className="flex w-full flex-wrap items-center justify-center gap-x-6 gap-y-2">
+          {tabLinks}
+        </div>
+        <div className="absolute top-1/2 end-6 -translate-y-1/2 lg:end-12">
           <LocaleSwitcher />
         </div>
       </div>
