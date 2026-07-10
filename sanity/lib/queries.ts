@@ -6,6 +6,7 @@ export const allPortfolioItemsQuery = groq`
     category,
     artistName,
     image,
+    "imageUrl": image.asset->url,
     "imgWidth": image.asset->metadata.dimensions.width,
     "imgHeight": image.asset->metadata.dimensions.height
   }

@@ -37,16 +37,34 @@ export function Logo({ className }: { className: string }) {
 // bar are mutually exclusive via breakpoint, never both visible at once).
 // The drawer repeats the same text as plain copy, not another h1, since it
 // can be open at the same time as the mobile bar.
-function BrandName({ as: Tag = 'h1' }: { as?: 'h1' | 'p' }) {
+function BrandName({
+  as: Tag = 'h1',
+  compact = false,
+}: {
+  as?: 'h1' | 'p';
+  compact?: boolean;
+}) {
   const t = useTranslations('Hero');
   return (
     <Tag className="font-display text-base leading-tight tracking-tight text-neutral-900 sm:text-lg">
-      {/* nowrap so a short phrase never splits mid-word (e.g. "Omri" alone
-          on its own line) — the regular part only joins at xl+; the 3-column
-          nav (brand | tabs | locale) switches on at lg but doesn't have room
-          for the full phrase until xl, or it squeezes into the tabs */}
-      <span className="font-bold whitespace-nowrap">{t('nameBold')}</span>
-      <span className="ms-2 hidden font-normal whitespace-nowrap xl:inline">
+      {/* nameBold stays nowrap so "Omri"/"Meron" never separate — it's one
+          short name. nameRegular is a multi-word phrase and is left free to
+          wrap between its own words (default text flow never splits mid-
+          word), since forcing it nowrap made it wide enough to collide with
+          the drawer's close button on narrow screens. A break is allowed
+          between the two spans too — the explicit {' '} matters: two
+          adjacent JSX elements with no text between them share no line-break
+          opportunity, so without it the pair renders as one unbreakable run
+          and overflows instead of wrapping when space is tight (e.g. the
+          mobile bar). The regular part only joins at xl+ when compact: the
+          desktop 3-column nav (brand | tabs | locale) switches on at lg but
+          doesn't have room for the full phrase until xl, or it squeezes into
+          the tabs. The mobile bar and drawer have no such neighbor to
+          squeeze, so they always show it (wrapping as needed). */}
+      <span className="font-bold whitespace-nowrap">{t('nameBold')}</span>{' '}
+      <span
+        className={`ms-2 font-normal ${compact ? 'hidden xl:inline' : ''}`}
+      >
         {t('nameRegular')}
       </span>
     </Tag>
@@ -109,9 +127,9 @@ export default function FilterBar({ active }: { active: FilterValue }) {
           href="/"
           aria-label="Home"
           onClick={() => setOpen(false)}
-          className="flex items-center gap-2"
+          className="flex min-w-0 items-center gap-2"
         >
-          <Logo className="h-6 w-auto" />
+          <Logo className="h-6 w-auto shrink-0" />
           <BrandName />
         </Link>
         <div className="absolute top-1/2 right-4 flex -translate-y-1/2 items-center gap-4">
@@ -155,9 +173,9 @@ export default function FilterBar({ active }: { active: FilterValue }) {
             href="/"
             aria-label="Home"
             onClick={() => setOpen(false)}
-            className="flex items-center gap-2"
+            className="flex min-w-0 items-center gap-2"
           >
-            <Logo className="h-6 w-auto" />
+            <Logo className="h-6 w-auto shrink-0" />
             <BrandName as="p" />
           </Link>
           <button
@@ -188,7 +206,7 @@ export default function FilterBar({ active }: { active: FilterValue }) {
           className="absolute top-1/2 start-6 flex -translate-y-1/2 items-center gap-3 lg:start-12"
         >
           <Logo className="h-6 w-auto" />
-          <BrandName />
+          <BrandName compact />
         </Link>
         <div className="flex w-full flex-wrap items-center justify-center gap-x-6 gap-y-2">
           {tabLinks}

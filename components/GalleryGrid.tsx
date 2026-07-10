@@ -355,15 +355,12 @@ export default function GalleryGrid({
                             image exactly: capped by max-height (and container
                             width), aspect ratio preserved, no letterboxing so
                             the frame is the same width on every image */}
-                        <Image
-                          src={urlFor(item.image)
-                            .height(1200)
-                            .auto('format')
-                            .url()}
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img
+                          src={item.imageUrl}
                           alt={label ?? ''}
                           width={item.imgWidth ?? 1200}
                           height={item.imgHeight ?? 900}
-                          sizes="90vw"
                           draggable={false}
                           onContextMenu={(e) => e.preventDefault()}
                           className="no-save h-auto max-h-80 w-auto max-w-full sm:max-h-128"
@@ -444,7 +441,7 @@ export default function GalleryGrid({
           role="dialog"
           aria-modal="true"
           onClick={close}
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black p-4"
+          className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-black p-4"
         >
           {/* counter, top-left */}
           <span className="pointer-events-none absolute top-4 left-4 text-sm text-white/80">
@@ -517,26 +514,53 @@ export default function GalleryGrid({
               only ever triggered by the arrow buttons or a swipe, never a
               tap on the image. When zoomed, drag pans instead. Either way
               a real drag (past the 3px jitter guard) suppresses the tap
-              action. */}
+              action.
+              flex-1/min-h-0 (instead of a fixed h-full) makes this share
+              the dialog's column with the caption row below, so the image
+              only ever grows to fill the space left over once the caption's
+              own height is reserved — it never overlaps it. */}
           <div
             ref={panRef}
             className={
               zoomed
-                ? 'flex h-full w-full cursor-grab touch-none items-center justify-center overflow-hidden select-none active:cursor-grabbing'
-                : 'flex max-h-full max-w-full touch-pan-y items-center justify-center'
+                ? 'flex w-full min-h-0 flex-1 cursor-grab touch-none items-center justify-center overflow-hidden select-none active:cursor-grabbing'
+                : 'flex w-full min-h-0 flex-1 max-w-full touch-pan-y items-center justify-center'
             }
             onClick={(e) => {
-              // stop the lightbox backdrop's click-to-close from firing
+              // stop the lightbox backdrop's click-to-close from firing for
+              // any click that originates on this container — a drag-end
+              // click included, or a real pan/swipe would bubble up and
+              // close the lightbox once it no longer stops here first
               e.stopPropagation();
+              if (drag.current.moved) return;
               // once zoomed, this container holds pointer capture (set
               // below), so the browser retargets pointerup/click to it
               // instead of the <img> — handle the toggle here, not on
               // the image, or a click-to-zoom-out would never fire
-              if (drag.current.moved) return;
               if (zoomed) {
                 zoomOut();
                 return;
               }
+              // this container now spans the full reactive image area (see
+              // above), so a click can land on its own empty letterboxed
+              // background rather than the artwork itself — treat that the
+              // same as clicking the backdrop (close), only the image
+              // itself should zoom in. Checked via the click's actual
+              // coordinates against the <img>'s own rect (not e.target):
+              // setPointerCapture above retargets every click's target to
+              // this container regardless of where the pointer really was.
+              const imgRect = imgRef.current?.getBoundingClientRect();
+              const onImage =
+                imgRect &&
+                e.clientX >= imgRect.left &&
+                e.clientX <= imgRect.right &&
+                e.clientY >= imgRect.top &&
+                e.clientY <= imgRect.bottom;
+              if (!onImage) {
+                close();
+                return;
+              }
+              e.stopPropagation();
               zoomInAt(e.clientX, e.clientY);
             }}
             onPointerDown={(e) => {
@@ -573,25 +597,25 @@ export default function GalleryGrid({
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               ref={imgRef}
-              src={urlFor(pageItems[lightbox].image)
-                .width(2000)
-                .auto('format')
-                .url()}
+              src={pageItems[lightbox].imageUrl}
               alt={pageItems[lightbox].artistName?.[locale] ?? ''}
               draggable={false}
               onContextMenu={(e) => e.preventDefault()}
               className={
                 zoomed
                   ? 'no-save w-auto max-w-none will-change-transform'
-                  : 'no-save max-h-[90vh] max-w-full cursor-zoom-in object-contain'
+                  : 'no-save max-h-full max-w-full cursor-zoom-in object-contain'
               }
             />
           </div>
 
-          {/* caption always visible at the bottom while maximized */}
+          {/* caption row — a normal-flow sibling of the image (not an
+              absolute overlay), so the dialog's column layout always
+              reserves real space for it below the image and it can never
+              sit on top of the artwork itself */}
           {pageItems[lightbox].artistName && (
-            <div className="pointer-events-none absolute inset-x-0 bottom-0 flex justify-center p-6">
-              <div className="max-w-xl text-center text-white">
+            <div className="pointer-events-none flex w-full shrink-0 justify-center px-6 pt-3 pb-2">
+              <div className="max-w-xl rounded-full bg-black/60 px-4 py-1.5 text-center text-white backdrop-blur-sm">
                 <Caption item={pageItems[lightbox]} locale={locale} />
               </div>
             </div>
