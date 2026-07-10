@@ -12,6 +12,9 @@ export interface PortfolioItem {
   category: Category;
   artistName?: LocalizedString;
   image: SanityImageSource;
+  // raw, untransformed Sanity CDN asset URL (image.asset->url) — the
+  // portfolio grid/lightbox render this directly, with no resize/compression
+  imageUrl: string;
   // intrinsic pixel dimensions, used to render each image at its true
   // aspect ratio (uncropped) within a fixed column width
   imgWidth?: number;

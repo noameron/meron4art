@@ -33,6 +33,7 @@ const item = (overrides: Partial<PortfolioItem>): PortfolioItem => ({
   _id: Math.random().toString(36).slice(2),
   category: 'paintings',
   image: { _type: 'image' } as PortfolioItem['image'],
+  imageUrl: 'https://cdn.example.test/fake.jpg',
   ...overrides,
 });
 
