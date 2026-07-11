@@ -45,7 +45,7 @@ export default function ContactForm({ to }: { to: string }) {
       </label>
       <button
         type="submit"
-        className="self-end border border-neutral-900 px-6 py-2 text-sm tracking-wide text-neutral-900 uppercase transition-colors hover:bg-neutral-900 hover:text-white"
+        className="self-center border border-neutral-900 px-6 py-2 text-sm tracking-wide text-neutral-900 uppercase transition-colors hover:bg-neutral-900 hover:text-white"
       >
         {t('send')}
       </button>
