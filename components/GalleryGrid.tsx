@@ -4,7 +4,11 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Image from 'next/image';
 import { useLocale, useTranslations } from 'next-intl';
 import { urlFor } from '@/sanity/lib/image';
-import type { FilterValue, HeroImage, PortfolioItem } from '@/sanity/lib/types';
+import type {
+  FilterValue,
+  PortfolioItem,
+  SizedImage,
+} from '@/sanity/lib/types';
 import FilterBar from './FilterBar';
 import ContactForm from './ContactForm';
 import { CONTACT } from './contactInfo';
@@ -56,7 +60,7 @@ const LastPageIcon = () => (
 const PAGE_SIZE = 10;
 const LIGHTBOX_SWIPE_THRESHOLD_PX = 40;
 
-// Artist name caption, shared by the grid hover overlay and the lightbox.
+// Artist name caption shown inside the lightbox.
 function Caption({
   item,
   locale,
@@ -79,7 +83,7 @@ export default function GalleryGrid({
   items: PortfolioItem[];
   active: FilterValue;
   banner?: React.ReactNode;
-  aboutImage?: HeroImage;
+  aboutImage?: SizedImage;
 }) {
   // index of the image open in the lightbox (null = closed)
   const [lightbox, setLightbox] = useState<number | null>(null);
@@ -271,16 +275,19 @@ export default function GalleryGrid({
       <div className="relative z-10 bg-white">
         {/* the About tab shows its own photo instead of the site hero;
             the home tab gets a narrow breathing gap above/below the hero,
-            other tabs keep it flush since the 25vh gap below already
+            other tabs keep it flush since the divider below already
             separates it from their content */}
         {active !== 'about' && (
           <div className={active === 'all' ? 'py-4 sm:py-6' : undefined}>
             {banner}
           </div>
         )}
-        {/* modest blank gap that separates the hero from the content below */}
+        {/* fine horizontal line separating the hero from the content below,
+            sharing the content column's width and gutters */}
         {active !== 'all' && active !== 'about' && (
-          <div aria-hidden className="h-[25vh]" />
+          <div aria-hidden className="mx-auto max-w-4xl px-6 py-10 sm:px-12">
+            <hr className="border-neutral-200" />
+          </div>
         )}
         <div ref={contentRef} className="scroll-mt-[4.5rem]">
           {active === 'all' ? null : active === 'about' ? (
@@ -349,7 +356,7 @@ export default function GalleryGrid({
                         type="button"
                         aria-label={label ?? t('view')}
                         onClick={() => setLightbox(i)}
-                        className="group relative inline-block max-w-full cursor-zoom-in overflow-hidden border border-neutral-200 bg-white p-1.5 shadow-sm transition-shadow hover:shadow-md"
+                        className="inline-block max-w-full cursor-zoom-in border border-neutral-200 bg-white p-1.5 shadow-sm transition-shadow hover:shadow-md"
                       >
                         {/* thin uniform white line (p-1.5) that hugs the
                             image exactly: capped by max-height (and container
@@ -365,17 +372,15 @@ export default function GalleryGrid({
                           onContextMenu={(e) => e.preventDefault()}
                           className="no-save h-auto max-h-80 w-auto max-w-full sm:max-h-128"
                         />
-                        {/* hover: blur the image behind a white wash and reveal
-                            the caption pinned to the bottom */}
-                        {item.artistName && (
-                          <span className="pointer-events-none absolute inset-0 flex transform-gpu items-end justify-center opacity-0 transition-opacity duration-150 group-hover:opacity-100">
-                            <span className="absolute inset-0 bg-white/80 backdrop-blur-md" />
-                            <span className="relative p-4 text-center text-neutral-700">
-                              <Caption item={item} locale={locale} />
-                            </span>
-                          </span>
-                        )}
                       </button>
+                      {/* artist name below the frame, gallery-plaque style:
+                          small, letterspaced caps (uppercase is a no-op for
+                          Hebrew), quiet but present */}
+                      {label && (
+                        <figcaption className="mt-3 text-center text-sm font-medium tracking-widest text-neutral-800 uppercase">
+                          {label}
+                        </figcaption>
+                      )}
                     </figure>
                   );
                 })}

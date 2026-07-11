@@ -4,8 +4,8 @@ import { useLocale } from 'next-intl';
 import { usePathname, useRouter } from '@/i18n/navigation';
 
 const LOCALES = [
-  { code: 'en', flag: '🇺🇸', name: 'English' },
-  { code: 'he', flag: '🇮🇱', name: 'עברית' },
+  { code: 'he', label: 'He', name: 'עברית' },
+  { code: 'en', label: 'En', name: 'English' },
 ] as const;
 
 export default function LocaleSwitcher() {
@@ -13,7 +13,8 @@ export default function LocaleSwitcher() {
   const pathname = usePathname();
   const router = useRouter();
 
-  // show only the language you can switch to, not the current one
+  // the whole button switches to the other language; the accessible name is
+  // that target language, matching what a click actually does
   const target = LOCALES.find(({ code }) => code !== locale) ?? LOCALES[0];
 
   return (
@@ -28,16 +29,25 @@ export default function LocaleSwitcher() {
         // (e.g. /paintings) and just swaps the locale prefix
         router.replace(pathname, { locale: target.code, scroll: false });
       }}
-      // fixed square + flex centering so the emoji flag lines up with the
-      // hamburger button next to it in the mobile bar (emoji baselines sit
-      // differently from text, so plain items-center on the parent isn't
-      // enough)
-      className="flex h-8 w-8 items-center justify-center text-lg leading-none opacity-80 transition-opacity hover:opacity-100"
+      // dir="ltr" pins the visual order to "He / En" in both languages;
+      // h-8 keeps it aligned with the hamburger button in the mobile bar
+      dir="ltr"
+      className="group flex h-8 items-center text-sm tracking-wide"
     >
-      {/* measured on macOS Chrome: the emoji's ink renders 1px above the
-          flex-centered line box, so nudge it down to true center (block,
-          because transforms don't apply to plain inline elements) */}
-      <span className="block translate-y-[1px]">{target.flag}</span>
+      {LOCALES.map(({ code, label }, i) => (
+        <span key={code} className="flex items-center">
+          {i > 0 && <span className="mx-1 font-light text-neutral-300">/</span>}
+          <span
+            className={
+              code === locale
+                ? 'font-bold text-neutral-900'
+                : 'font-normal text-neutral-400 transition-colors group-hover:text-neutral-700'
+            }
+          >
+            {label}
+          </span>
+        </span>
+      ))}
     </button>
   );
 }

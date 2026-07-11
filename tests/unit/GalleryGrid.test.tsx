@@ -82,17 +82,18 @@ describe('GalleryGrid', () => {
   });
 
   it('shows the empty state when the active category has no items', () => {
-    renderGrid('3d-sculpture');
+    renderGrid('Sculptures & More');
     expect(screen.queryAllByRole('figure')).toHaveLength(0);
     expect(
       screen.getByText('No pieces in this category yet.'),
     ).toBeInTheDocument();
   });
 
-  it('renders the artist name under each image', () => {
+  it('renders the artist name as a caption under each image', () => {
     renderGrid('paintings');
-    expect(screen.getByText('Dana')).toBeInTheDocument();
-    expect(screen.getByText('Roi')).toBeInTheDocument();
+    // a figcaption in normal flow below the frame, not a hover overlay
+    expect(screen.getByText('Dana').closest('figcaption')).not.toBeNull();
+    expect(screen.getByText('Roi').closest('figcaption')).not.toBeNull();
   });
 
   it('shows the bio, centered, on the About tab', () => {
@@ -123,11 +124,10 @@ describe('GalleryGrid', () => {
     expect(screen.queryAllByRole('figure')).toHaveLength(0);
   });
 
-  it('omits the hover caption when an item has no artist name', () => {
+  it('omits the caption when an item has no artist name', () => {
     renderGrid('paintings', [item({ _id: 'bare', category: 'paintings' })]);
     const figure = screen.getByRole('figure');
-    // no name → no hover overlay (identified by its white blur wash)
-    expect(figure.querySelector('.backdrop-blur-md')).toBeNull();
+    expect(figure.querySelector('figcaption')).toBeNull();
   });
 });
 
