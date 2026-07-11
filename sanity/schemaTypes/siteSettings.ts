@@ -1,4 +1,5 @@
 import { defineField, defineType } from 'sanity';
+import { ImageMetaInput } from '../components/ImageMetaInput';
 
 export const SITE_SETTINGS_ID = 'siteSettings';
 
@@ -6,22 +7,17 @@ export const siteSettings = defineType({
   name: 'siteSettings',
   title: 'Site Settings',
   type: 'document',
+  // the home-page hero rotation is drawn automatically from the portfolio
+  // items now, so there is no hero photo field to edit here anymore
   fields: [
-    defineField({
-      name: 'heroImages',
-      title: 'Hero Photographs',
-      description:
-        'Full-bleed image(s) shown at the top of the home page. The frame matches each photo’s own shape without cropping, so use wide/cinematic photos (16:9 or wider) — a standard 3:2 or 4:3 photo will render noticeably smaller and shorter. Add more than one to show an auto-advancing gallery (10s per photo, with dots and swipe to change manually).',
-      type: 'array',
-      of: [{ type: 'image', options: { hotspot: true } }],
-      options: { layout: 'grid' },
-    }),
     defineField({
       name: 'aboutImage',
       title: 'About Photo',
       description: 'Portrait photo shown alongside the bio on the About tab.',
       type: 'image',
       options: { hotspot: true },
+      // shows the upload's pixel dimensions and file size below the image
+      components: { input: ImageMetaInput },
     }),
   ],
   preview: {

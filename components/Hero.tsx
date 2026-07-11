@@ -1,1 +1,1 @@
-export { HeroBanner } from './HeroBanner';
+export { HeroBanner, type HeroSlide } from './HeroBanner';

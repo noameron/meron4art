@@ -3,9 +3,8 @@ import { act, fireEvent, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { NextIntlClientProvider } from 'next-intl';
 import type { SanityImageSource } from '@sanity/image-url';
-import { HeroBanner } from '@/components/Hero';
+import { HeroBanner, type HeroSlide } from '@/components/Hero';
 import en from '@/messages/en.json';
-import type { SiteSettings } from '@/sanity/lib/types';
 
 // distinguish images by their (test-only) id so we can assert which one is
 // showing after navigation, instead of every image resolving to one URL
@@ -20,14 +19,18 @@ vi.mock('@/sanity/lib/image', () => ({
   },
 }));
 
-function image(id: string): SanityImageSource {
-  return { _type: 'image', id } as unknown as SanityImageSource;
+function image(id: string): HeroSlide {
+  return {
+    image: { _type: 'image', id } as unknown as SanityImageSource,
+    imgWidth: 1600,
+    imgHeight: 1200,
+  };
 }
 
-function renderBanner(heroImages: SiteSettings['heroImages']) {
+function renderBanner(heroItems?: HeroSlide[]) {
   return render(
     <NextIntlClientProvider locale="en" messages={en}>
-      <HeroBanner heroImages={heroImages} />
+      <HeroBanner heroItems={heroItems} />
     </NextIntlClientProvider>,
   );
 }

@@ -21,6 +21,27 @@ import IntroOverlay from '@/components/IntroOverlay';
 // artwork appears without a manual redeploy.
 export const revalidate = 60;
 
+const HERO_IMAGE_COUNT = 5;
+
+// Only photos uploaded at least this tall qualify for the hero: a shorter
+// photo would have to upscale to fill the frame's height and turn soft.
+// 800px covers the frame's rendered height (55vh) on typical desktop
+// viewports; taller photos are simply scaled down by the frame, which
+// preserves their aspect ratio exactly (object-contain never stretches).
+const MIN_HERO_IMAGE_HEIGHT_PX = 800;
+
+// Fisher-Yates shuffle of a copy; used to draw the hero photos. Runs at
+// build/ISR revalidation time, so the pick rotates over time (at most once
+// a minute), not on every page view.
+function randomSample<T>(list: T[], count: number): T[] {
+  const copy = [...list];
+  for (let i = copy.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [copy[i], copy[j]] = [copy[j], copy[i]];
+  }
+  return copy.slice(0, count);
+}
+
 // Pre-render every locale × tab: /en, /en/paintings-drawings, ... /he/contact
 export function generateStaticParams() {
   return routing.locales.flatMap((locale) =>
@@ -48,6 +69,18 @@ export default async function Home({
     client.fetch<SiteSettings | null>(siteSettingsQuery),
   ]);
 
+  // the hero rotation is drawn from the gallery itself, not a separate
+  // Studio-managed photo set; the items carry their stored upload
+  // dimensions, so the banner never has to derive them on the fly.
+  // Photos below the height cutoff (or missing their stored dimensions)
+  // are skipped rather than upscaled; if none qualify, no hero is shown.
+  const heroItems = randomSample(
+    items.filter(
+      (item) => (item.imgHeight ?? 0) >= MIN_HERO_IMAGE_HEIGHT_PX,
+    ),
+    HERO_IMAGE_COUNT,
+  );
+
   return (
     <main>
       {/* once-per-session animated intro, home tab only */}
@@ -55,7 +88,7 @@ export default async function Home({
       <GalleryGrid
         items={items}
         active={active}
-        banner={<HeroBanner heroImages={settings?.heroImages} />}
+        banner={<HeroBanner heroItems={heroItems} />}
         aboutImage={settings?.aboutImage}
       />
     </main>

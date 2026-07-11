@@ -2,6 +2,7 @@ import { defineField, defineType } from 'sanity';
 // Category labels shown in the Studio dropdown/tabs are sourced from the
 // same file as the site's nav headlines, so the two can't drift apart.
 import en from '@/messages/en.json';
+import { ImageMetaInput } from '../components/ImageMetaInput';
 
 // Reusable localized string: renders as EN / HE tabs in the Studio
 export const localizedString = defineType({
@@ -50,6 +51,8 @@ export const portfolioItem = defineType({
       type: 'image',
       options: { hotspot: true },
       validation: (rule) => rule.required(),
+      // shows the upload's pixel dimensions and file size below the image
+      components: { input: ImageMetaInput },
     }),
     defineField({
       name: 'category',
