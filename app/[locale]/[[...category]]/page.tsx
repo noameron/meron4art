@@ -15,6 +15,7 @@ import {
 import { routing } from '@/i18n/routing';
 import { HeroBanner } from '@/components/Hero';
 import GalleryGrid from '@/components/GalleryGrid';
+import IntroOverlay from '@/components/IntroOverlay';
 
 // ISR: re-fetch Sanity content at most once a minute so newly published
 // artwork appears without a manual redeploy.
@@ -49,6 +50,8 @@ export default async function Home({
 
   return (
     <main>
+      {/* once-per-session animated intro, home tab only */}
+      {active === 'all' && <IntroOverlay />}
       <GalleryGrid
         items={items}
         active={active}

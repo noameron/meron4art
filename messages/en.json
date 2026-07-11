@@ -28,6 +28,11 @@
       "status": "Page {current} of {total}"
     }
   },
+  "Error": {
+    "title": "Something went wrong",
+    "description": "We couldn't load the gallery. Please check your connection and try again.",
+    "retry": "Try again"
+  },
   "Footer": {
     "home": "Home",
     "sitemap": "Sitemap",

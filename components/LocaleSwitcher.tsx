@@ -28,9 +28,16 @@ export default function LocaleSwitcher() {
         // (e.g. /paintings) and just swaps the locale prefix
         router.replace(pathname, { locale: target.code, scroll: false });
       }}
-      className="text-lg leading-none opacity-80 transition-opacity hover:opacity-100"
+      // fixed square + flex centering so the emoji flag lines up with the
+      // hamburger button next to it in the mobile bar (emoji baselines sit
+      // differently from text, so plain items-center on the parent isn't
+      // enough)
+      className="flex h-8 w-8 items-center justify-center text-lg leading-none opacity-80 transition-opacity hover:opacity-100"
     >
-      {target.flag}
+      {/* measured on macOS Chrome: the emoji's ink renders 1px above the
+          flex-centered line box, so nudge it down to true center (block,
+          because transforms don't apply to plain inline elements) */}
+      <span className="block translate-y-[1px]">{target.flag}</span>
     </button>
   );
 }
