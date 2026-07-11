@@ -1,6 +1,6 @@
 import { test, expect, type Page } from '@playwright/test';
 
-const EN_FILTERS = ['Paintings & Drawings', 'Shows', '3D Art'];
+const EN_FILTERS = ['Paintings & Drawings', 'Shows', 'Sculptures & More'];
 
 // the footer sitemap repeats the tab links, so tab assertions must be
 // scoped to the top tab bar (the first nav on the page)

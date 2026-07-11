@@ -28,7 +28,7 @@ describe('Footer', () => {
     for (const name of [
       'Home',
       'Paintings & Drawings',
-      '3D Art',
+      'Sculptures & More',
       'Shows',
       'About',
       'Contact',

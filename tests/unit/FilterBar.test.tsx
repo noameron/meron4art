@@ -37,7 +37,7 @@ describe('FilterBar', () => {
     renderFilterBar();
     for (const name of [
       'Paintings & Drawings',
-      '3D Art',
+      'Sculptures & More',
       'Shows',
       'About',
       'Contact',
