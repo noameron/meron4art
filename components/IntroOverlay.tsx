@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Logo } from './FilterBar';
+import { INTRO_SEEN_KEY } from './introSeen';
 // the intro headline is always English, regardless of locale
 import en from '@/messages/en.json';
 
@@ -11,7 +12,6 @@ const HOLD_MS = 2000;
 const FLY_MS = 900;
 // quick fade used when the visitor clicks to skip
 const SKIP_FADE_MS = 250;
-const SEEN_KEY = 'introSeen';
 
 type Phase = 'hold' | 'fly' | 'skip' | 'done';
 
@@ -29,8 +29,12 @@ export default function IntroOverlay() {
   const timers = useRef<number[]>([]);
 
   const markSeen = () => {
+    // the html flag lets the globals.css rule hide any future render of the
+    // overlay instantly (client-side navigations back to the home tab),
+    // before this component's mount effect gets a chance to run
+    document.documentElement.dataset.introSeen = '1';
     try {
-      sessionStorage.setItem(SEEN_KEY, '1');
+      sessionStorage.setItem(INTRO_SEEN_KEY, '1');
     } catch {
       /* private-mode storage errors just mean the intro replays */
     }
@@ -88,7 +92,7 @@ export default function IntroOverlay() {
   useEffect(() => {
     const pending = timers.current;
     try {
-      if (sessionStorage.getItem(SEEN_KEY)) {
+      if (sessionStorage.getItem(INTRO_SEEN_KEY)) {
         setPhase('done');
         return;
       }
@@ -124,12 +128,11 @@ export default function IntroOverlay() {
 
   return (
     <div
+      // the id is targeted by the globals.css rule that hides repeat views
       id="intro-overlay"
       // aria-hidden: purely decorative duplicate of the navbar brand; the
       // real page stays available to assistive tech the whole time
       aria-hidden
-      // the pre-hydration script below may set display:none on this node
-      suppressHydrationWarning
       onClick={skip}
       className={`fixed inset-0 z-[60] flex items-center justify-center px-6 transition-opacity ${
         phase === 'skip' ? 'opacity-0' : 'opacity-100'
@@ -187,14 +190,6 @@ export default function IntroOverlay() {
           </p>
         </div>
       </div>
-      {/* runs before hydration: repeat views in the same session (locale
-          switch, back-navigation) must not flash the intro while React
-          boots; the mount effect then unmounts it for real */}
-      <script
-        dangerouslySetInnerHTML={{
-          __html: `try{if(sessionStorage.getItem('${SEEN_KEY}'))document.getElementById('intro-overlay').style.display='none'}catch(e){}`,
-        }}
-      />
     </div>
   );
 }

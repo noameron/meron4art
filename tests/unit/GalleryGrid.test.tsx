@@ -82,7 +82,7 @@ describe('GalleryGrid', () => {
   });
 
   it('shows the empty state when the active category has no items', () => {
-    renderGrid('Sculptures & More');
+    renderGrid('3d-sculpture');
     expect(screen.queryAllByRole('figure')).toHaveLength(0);
     expect(
       screen.getByText('No pieces in this category yet.'),

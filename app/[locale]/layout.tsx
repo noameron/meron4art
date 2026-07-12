@@ -5,6 +5,7 @@ import { notFound } from 'next/navigation';
 import { Rubik } from 'next/font/google';
 import { routing } from '@/i18n/routing';
 import { Footer } from '@/components/Footer';
+import { INTRO_SEEN_KEY } from '@/components/introSeen';
 import '../globals.css';
 
 // Rubik across the whole site: light / regular / medium / bold / black.
@@ -49,8 +50,22 @@ export default async function LocaleLayout({
       lang={locale}
       dir={dir}
       className={rubik.variable}
+      // the intro script below may add data-intro-seen to this element
+      // before React hydrates
+      suppressHydrationWarning
     >
       <body className="min-h-screen bg-white font-body text-neutral-900 antialiased">
+        {/* Runs while the HTML streams, before paint and hydration: full
+            page loads (locale switch, back-navigation) in a session that
+            already played the intro must not flash it. Flags <html> so the
+            matching rule in globals.css hides the overlay; IntroOverlay
+            sets the same flag after playing, covering client-side
+            navigations back to the home tab. */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `try{if(sessionStorage.getItem('${INTRO_SEEN_KEY}'))document.documentElement.dataset.introSeen='1'}catch(e){}`,
+          }}
+        />
         <NextIntlClientProvider>
           {children}
           <Footer locale={locale as 'en' | 'he'} />

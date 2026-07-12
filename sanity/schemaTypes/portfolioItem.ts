@@ -37,7 +37,7 @@ export const localizedString = defineType({
 export const CATEGORIES = [
   { title: en.Filters.paintings, value: 'paintings' },
   { title: en.Filters['gallery-pictures'], value: 'gallery-pictures' },
-  { title: en.Filters['Sculptures & More'], value: 'Sculptures & More' },
+  { title: en.Filters['3d-sculpture'], value: '3d-sculpture' },
 ] as const;
 
 export const portfolioItem = defineType({
