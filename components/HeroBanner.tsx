@@ -6,7 +6,7 @@ import { useTranslations } from 'next-intl';
 import { urlFor } from '@/sanity/lib/image';
 import type { PortfolioItem } from '@/sanity/lib/types';
 
-const AUTOPLAY_MS = 10000;
+const DEFAULT_AUTOPLAY_MS = 5000;
 const SWIPE_THRESHOLD_PX = 40;
 
 // a gallery piece shown in the hero rotation: the photo plus its stored
@@ -16,7 +16,13 @@ export type HeroSlide = Pick<PortfolioItem, 'image' | 'imgWidth' | 'imgHeight'>;
 // separate client component: onContextMenu is a function prop, which can't
 // cross the server/client boundary from a plain server component into
 // next/image's <Image>
-export function HeroBanner({ heroItems }: { heroItems?: HeroSlide[] }) {
+export function HeroBanner({
+  heroItems,
+  autoplayMs = DEFAULT_AUTOPLAY_MS,
+}: {
+  heroItems?: HeroSlide[];
+  autoplayMs?: number;
+}) {
   const images = heroItems ?? [];
   const t = useTranslations('Hero');
   const [index, setIndex] = useState(0);
@@ -35,9 +41,9 @@ export function HeroBanner({ heroItems }: { heroItems?: HeroSlide[] }) {
   // click or swipe) restarts the countdown from that point
   useEffect(() => {
     if (images.length < 2) return;
-    const id = setTimeout(next, AUTOPLAY_MS);
+    const id = setTimeout(next, autoplayMs);
     return () => clearTimeout(id);
-  }, [index, images.length, next]);
+  }, [index, images.length, next, autoplayMs]);
 
   if (images.length === 0) return null;
 

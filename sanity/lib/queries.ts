@@ -14,6 +14,7 @@ export const allPortfolioItemsQuery = groq`
 
 export const siteSettingsQuery = groq`
   *[_type == "siteSettings"][0] {
+    heroIntervalSeconds,
     "aboutImage": aboutImage{
       ...,
       "imgWidth": asset->metadata.dimensions.width,

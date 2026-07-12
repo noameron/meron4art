@@ -8,8 +8,18 @@ export const siteSettings = defineType({
   title: 'Site Settings',
   type: 'document',
   // the home-page hero rotation is drawn automatically from the portfolio
-  // items now, so there is no hero photo field to edit here anymore
+  // items now, so there is no hero photo field to edit here anymore; only
+  // its pace is configurable below
   fields: [
+    defineField({
+      name: 'heroIntervalSeconds',
+      title: 'Hero Rotation Interval (seconds)',
+      description:
+        'How long each home-page hero photo is shown before advancing to the next.',
+      type: 'number',
+      initialValue: 5,
+      validation: (rule) => rule.min(1),
+    }),
     defineField({
       name: 'aboutImage',
       title: 'About Photo',

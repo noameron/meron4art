@@ -66,7 +66,11 @@ export default async function Home({
 
   const [items, settings] = await Promise.all([
     client.fetch<PortfolioItem[]>(allPortfolioItemsQuery),
-    client.fetch<SiteSettings | null>(siteSettingsQuery),
+    // settings are cosmetic (hero pace, about photo): if the fetch fails,
+    // render with defaults instead of failing the whole page
+    client
+      .fetch<SiteSettings | null>(siteSettingsQuery)
+      .catch(() => null),
   ]);
 
   // the hero rotation is drawn from the gallery itself, not a separate
@@ -88,7 +92,17 @@ export default async function Home({
       <GalleryGrid
         items={items}
         active={active}
-        banner={<HeroBanner heroItems={heroItems} />}
+        banner={
+          <HeroBanner
+            heroItems={heroItems}
+            // Studio-configured pace; guard rejects 0/negative junk data
+            autoplayMs={
+              settings?.heroIntervalSeconds && settings.heroIntervalSeconds > 0
+                ? settings.heroIntervalSeconds * 1000
+                : undefined
+            }
+          />
+        }
         aboutImage={settings?.aboutImage}
       />
     </main>
