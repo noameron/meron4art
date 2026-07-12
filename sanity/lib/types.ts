@@ -79,4 +79,6 @@ export type SizedImage = SanityImageSource & {
 
 export interface SiteSettings {
   aboutImage?: SizedImage;
+  // hero autoplay pace, editable in the Studio; frontend falls back to 5s
+  heroIntervalSeconds?: number;
 }

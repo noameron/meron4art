@@ -27,10 +27,10 @@ function image(id: string): HeroSlide {
   };
 }
 
-function renderBanner(heroItems?: HeroSlide[]) {
+function renderBanner(heroItems?: HeroSlide[], autoplayMs?: number) {
   return render(
     <NextIntlClientProvider locale="en" messages={en}>
-      <HeroBanner heroItems={heroItems} />
+      <HeroBanner heroItems={heroItems} autoplayMs={autoplayMs} />
     </NextIntlClientProvider>,
   );
 }
@@ -70,7 +70,7 @@ describe('Hero', () => {
       expect(dots[0]).not.toHaveAttribute('aria-current');
     });
 
-    it('auto-advances after 10 seconds and loops back at the end', () => {
+    it('auto-advances after 5 seconds and loops back at the end', () => {
       vi.useFakeTimers();
       renderBanner([image('a'), image('b')]);
 
@@ -78,14 +78,25 @@ describe('Hero', () => {
       expect(dots[0]).toHaveAttribute('aria-current', 'true');
 
       act(() => {
-        vi.advanceTimersByTime(10000);
+        vi.advanceTimersByTime(5000);
       });
       expect(dots[1]).toHaveAttribute('aria-current', 'true');
 
       act(() => {
-        vi.advanceTimersByTime(10000);
+        vi.advanceTimersByTime(5000);
       });
       expect(dots[0]).toHaveAttribute('aria-current', 'true');
+    });
+
+    it('honors a custom autoplay interval from settings', () => {
+      vi.useFakeTimers();
+      renderBanner([image('a'), image('b')], 3000);
+
+      const dots = screen.getAllByRole('button');
+      act(() => {
+        vi.advanceTimersByTime(3000);
+      });
+      expect(dots[1]).toHaveAttribute('aria-current', 'true');
     });
 
     it('swipes to the next photo past the drag threshold', () => {
