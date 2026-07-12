@@ -44,7 +44,9 @@ interface ReorderDoc {
   image?: SanityImageSource;
 }
 
-const QUERY = `*[_type == "portfolioItem"]{ _id, category, artistName, displayOrder, image } | order(displayOrder asc, _createdAt desc)`;
+// published docs only — a draft would show up as a duplicate row and its
+// stale displayOrder would silently revert the reorder when published
+const QUERY = `*[_type == "portfolioItem" && !(_id in path("drafts.**"))]{ _id, category, artistName, displayOrder, image } | order(displayOrder asc, _createdAt desc)`;
 
 function Row({ doc }: { doc: ReorderDoc }) {
   const {
@@ -167,11 +169,28 @@ export function ReorderTool() {
       );
 
       setSaving(true);
-      const tx = client.transaction();
-      for (const patch of patches) {
-        tx.patch(patch.id, { set: { displayOrder: patch.displayOrder } });
-      }
-      tx.commit()
+      // a doc mid-edit in the desk has a draft copy whose stale displayOrder
+      // would overwrite this reorder on publish — patch existing drafts too
+      client
+        .fetch<string[]>(`*[_id in $ids]._id`, {
+          ids: patches.map((p) => `drafts.${p.id}`),
+        })
+        .then((draftIds) => {
+          const tx = client.transaction();
+          for (const patch of patches) {
+            tx.patch(patch.id, { set: { displayOrder: patch.displayOrder } });
+            if (draftIds.includes(`drafts.${patch.id}`)) {
+              tx.patch(`drafts.${patch.id}`, {
+                set: { displayOrder: patch.displayOrder },
+              });
+            }
+          }
+          return tx.commit();
+        })
+        .then(() => {
+          // refresh the site's ISR cache so the new order is live immediately
+          fetch('/api/revalidate', { method: 'POST' }).catch(() => {});
+        })
         .catch(() => {
           toast.push({ status: 'error', title: 'Failed to save new order' });
           load();
