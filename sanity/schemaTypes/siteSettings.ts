@@ -15,7 +15,7 @@ export const siteSettings = defineType({
       name: 'heroIntervalSeconds',
       title: 'Hero Rotation Interval (seconds)',
       description:
-        'How long each home-page hero photo is shown before advancing to the next.',
+        'How long each home-page hero photo is shown before advancing to the next. Default is 5 seconds.',
       type: 'number',
       initialValue: 5,
       validation: (rule) => rule.min(1),

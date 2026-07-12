@@ -60,10 +60,15 @@ export default async function LocaleLayout({
             already played the intro must not flash it. Flags <html> so the
             matching rule in globals.css hides the overlay; IntroOverlay
             sets the same flag after playing, covering client-side
-            navigations back to the home tab. */}
-        <script
+            navigations back to the home tab. The script rides inside a
+            hidden div as raw HTML because React warns about (and never
+            executes) <script> elements it renders on the client; as raw
+            markup the browser still runs it on full page loads, which is
+            the only time it's needed. */}
+        <div
+          hidden
           dangerouslySetInnerHTML={{
-            __html: `try{if(sessionStorage.getItem('${INTRO_SEEN_KEY}'))document.documentElement.dataset.introSeen='1'}catch(e){}`,
+            __html: `<script>try{if(sessionStorage.getItem('${INTRO_SEEN_KEY}'))document.documentElement.dataset.introSeen='1'}catch(e){}</script>`,
           }}
         />
         <NextIntlClientProvider>
