@@ -18,7 +18,7 @@ const rubik = Rubik({
 
 export const metadata: Metadata = {
   metadataBase: new URL('https://www.meron4art.co.il'),
-  title: 'Fine-Art Reproduction Photography',
+  title: 'Omri Meron - Fine Art Reproduction',
   description:
     'Professional, gallery-grade photography of paintings, sculptures and fine art.',
 };
