@@ -165,8 +165,7 @@ export function BulkUploadTool() {
     // localizedString requires both languages once one is set, so catch a
     // lopsided artist name here instead of creating an invalid document
     const incomplete = items.find(
-      (i) =>
-        Boolean(i.artistNameEn.trim()) !== Boolean(i.artistNameHe.trim()),
+      (i) => Boolean(i.artistNameEn.trim()) !== Boolean(i.artistNameHe.trim()),
     );
     if (incomplete) {
       toast.push({
@@ -208,6 +207,9 @@ export function BulkUploadTool() {
         });
       });
       await tx.commit();
+
+      // refresh the site's ISR cache so the new pieces are live immediately
+      fetch('/api/revalidate', { method: 'POST' }).catch(() => {});
 
       toast.push({
         status: 'success',

@@ -273,22 +273,9 @@ export default function GalleryGrid({
     <section>
       <FilterBar active={active} />
       <div className="relative z-10 bg-white">
-        {/* the About tab shows its own photo instead of the site hero;
-            the home tab gets a narrow breathing gap above/below the hero,
-            other tabs keep it flush since the divider below already
-            separates it from their content */}
-        {active !== 'about' && (
-          <div className={active === 'all' ? 'py-4 sm:py-6' : undefined}>
-            {banner}
-          </div>
-        )}
-        {/* fine horizontal line separating the hero from the content below,
-            sharing the content column's width and gutters */}
-        {active !== 'all' && active !== 'about' && (
-          <div aria-hidden className="mx-auto max-w-4xl px-6 py-10 sm:px-12">
-            <hr className="border-neutral-200" />
-          </div>
-        )}
+        {/* the hero rotation belongs to the home tab only; category, about
+            and contact tabs go straight to their own content */}
+        {active === 'all' && <div className="py-4 sm:py-6">{banner}</div>}
         <div ref={contentRef} className="scroll-mt-[4.5rem]">
           {active === 'all' ? null : active === 'about' ? (
             <div className="mx-auto flex max-w-3xl flex-col items-center px-6 py-16 text-center">
@@ -356,12 +343,10 @@ export default function GalleryGrid({
                         type="button"
                         aria-label={label ?? t('view')}
                         onClick={() => setLightbox(i)}
-                        className="inline-block max-w-full cursor-zoom-in border border-neutral-200 bg-white p-1.5 shadow-sm transition-shadow hover:shadow-md"
+                        className="inline-block max-w-full cursor-zoom-in"
                       >
-                        {/* thin uniform white line (p-1.5) that hugs the
-                            image exactly: capped by max-height (and container
-                            width), aspect ratio preserved, no letterboxing so
-                            the frame is the same width on every image */}
+                        {/* unframed: capped by max-height (and container
+                            width), aspect ratio preserved */}
                         {/* eslint-disable-next-line @next/next/no-img-element */}
                         <img
                           src={item.imageUrl}
