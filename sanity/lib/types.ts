@@ -1,6 +1,6 @@
 import type { SanityImageSource } from '@sanity/image-url';
 
-export type Category = 'paintings' | 'gallery-pictures' | 'Sculptures & More';
+export type Category = 'paintings' | 'gallery-pictures' | '3d-sculpture';
 
 export interface LocalizedString {
   en: string;
@@ -23,7 +23,7 @@ export interface PortfolioItem {
 
 export const CATEGORY_VALUES: Category[] = [
   'paintings',
-  'Sculptures & More',
+  '3d-sculpture',
   'gallery-pictures',
 ];
 
@@ -33,7 +33,7 @@ export const CATEGORY_VALUES: Category[] = [
 // content migration.
 export const CATEGORY_SLUGS: Record<Category, string> = {
   paintings: 'paintings-drawings',
-  'Sculptures & More': '3d-art',
+  '3d-sculpture': 'sculptures',
   'gallery-pictures': 'shows',
 };
 

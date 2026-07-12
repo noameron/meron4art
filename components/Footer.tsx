@@ -16,7 +16,7 @@ export function Footer({ locale }: { locale: 'en' | 'he' }) {
   const links = [
     { href: '/', label: t('Footer.home') },
     { href: pathForFilter('paintings'), label: t('Filters.paintings') },
-    { href: pathForFilter('Sculptures & More'), label: t('Filters.Sculptures & More') },
+    { href: pathForFilter('3d-sculpture'), label: t('Filters.3d-sculpture') },
     {
       href: pathForFilter('gallery-pictures'),
       label: t('Filters.gallery-pictures'),

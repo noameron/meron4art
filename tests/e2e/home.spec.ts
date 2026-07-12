@@ -70,7 +70,7 @@ test.describe('home page', () => {
   test('every category route loads directly and shows items or empty state', async ({
     page,
   }) => {
-    for (const path of ['paintings-drawings', 'shows', '3d-art']) {
+    for (const path of ['paintings-drawings', 'shows', 'sculptures']) {
       await page.goto(`/en/${path}`);
       const figures = page.locator('figure');
       const emptyState = page.getByText('No pieces in this category yet.');
