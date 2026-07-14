@@ -257,7 +257,11 @@ function DesktopBar({
 }) {
   return (
     <div className="relative hidden items-center py-6 lg:flex">
-      <div className="absolute top-1/2 left-6 -translate-y-1/2 lg:left-12">
+      {/* -3.5px on top of the -50% centering: measured baseline gap between
+          the brand name (text-lg) and the tab labels (text-sm) when both
+          blocks are box-centered; lifting the whole lockup keeps the name
+          flush with the logo while putting both texts on one baseline */}
+      <div className="absolute top-1/2 left-6 -translate-y-[calc(50%+3.5px)] lg:left-12">
         <Brand compact logoClass="h-6" gap="gap-3" onNavigate={onNavigate} />
       </div>
       <div className="flex w-full flex-wrap items-center justify-center gap-x-6 gap-y-2">
@@ -295,12 +299,6 @@ export default function FilterBar({ active }: { active: FilterValue }) {
         aria-current={isActive ? 'page' : undefined}
         className="group relative inline-flex items-center justify-center px-3 py-1"
       >
-        {/* sharp (unrounded) square outline that grows and fades into
-            place on hover, rather than a solid background fill */}
-        <span
-          aria-hidden
-          className="absolute inset-0 scale-90 border border-neutral-900 opacity-0 transition-all duration-300 ease-out group-hover:scale-100 group-hover:opacity-100"
-        />
         <span
           className={`relative text-sm tracking-wide uppercase transition-colors duration-300 group-hover:font-bold group-hover:text-neutral-900 ${
             isActive
@@ -310,6 +308,12 @@ export default function FilterBar({ active }: { active: FilterValue }) {
         >
           {t(option)}
         </span>
+        {/* bold underline that grows out from the center under the text
+            on hover; inset-x-3 keeps it text-wide, inside the px-3 pad */}
+        <span
+          aria-hidden
+          className="absolute inset-x-3 bottom-0.5 h-0.5 origin-center scale-x-0 bg-neutral-900 transition-transform duration-300 ease-out group-hover:scale-x-100"
+        />
       </Link>
     );
   });
