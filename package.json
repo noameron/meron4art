@@ -28,6 +28,7 @@
   },
   "devDependencies": {
     "@playwright/test": "^1.61.1",
+    "@swc/helpers": "^0.5.23",
     "@tailwindcss/postcss": "^4",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.2",
@@ -43,5 +44,17 @@
     "tailwindcss": "^4",
     "typescript": "^5",
     "vitest": "^4.1.9"
+  },
+  "overrides": {
+    "adm-zip": "^0.6.0",
+    "smol-toml": "^1.7.0",
+    "postcss": "^8.5.10",
+    "@sanity/uuid": "^3.0.3",
+    "@vercel/frameworks": {
+      "js-yaml": "^3.15.0"
+    },
+    "typeid-js": {
+      "uuid": "^11.1.1"
+    }
   }
 }

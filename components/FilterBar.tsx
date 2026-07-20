@@ -300,7 +300,13 @@ export default function FilterBar({ active }: { active: FilterValue }) {
         className="group relative inline-flex items-center justify-center px-3 py-1"
       >
         <span
-          className={`relative text-sm tracking-wide uppercase transition-colors duration-300 group-hover:font-bold group-hover:text-neutral-900 ${
+          // uppercase is a no-op for Hebrew, and Hebrew glyphs sit shorter
+          // than Latin cap-height at the same font-size, so the Hebrew
+          // labels read visibly smaller next to the English all-caps ones;
+          // bump Hebrew a step to text-base to match perceived size
+          className={`relative tracking-wide transition-colors duration-300 group-hover:font-bold group-hover:text-neutral-900 ${
+            rtl ? 'text-base' : 'text-sm uppercase'
+          } ${
             isActive
               ? 'font-bold text-neutral-900'
               : 'font-normal text-neutral-400'

@@ -285,6 +285,7 @@ export default function GalleryGrid({
                   alt=""
                   width={aboutImage.imgWidth ?? 800}
                   height={aboutImage.imgHeight ?? 1000}
+                  priority
                   draggable={false}
                   onContextMenu={(e) => e.preventDefault()}
                   className="no-save mb-10 h-auto max-h-96 w-auto max-w-full border border-neutral-200 bg-white p-1.5 shadow-sm"
@@ -292,6 +293,20 @@ export default function GalleryGrid({
               )}
               <p className="text-base leading-relaxed font-light text-neutral-600 sm:text-lg">
                 {tAbout('bio')}
+              </p>
+              <p className="mt-10 text-base leading-relaxed font-light text-neutral-600 sm:text-lg">
+                {tAbout.rich('studioCredit', {
+                  link: (chunks) => (
+                    <a
+                      href="https://www.omrimeron.com"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="font-bold text-neutral-600 no-underline hover:underline"
+                    >
+                      {chunks}
+                    </a>
+                  ),
+                })}
               </p>
             </div>
           ) : active === 'contact' ? (
