@@ -298,7 +298,7 @@ export default function GalleryGrid({
                 {tAbout.rich('studioCredit', {
                   link: (chunks) => (
                     <a
-                      href="https://www.omrimeron.com/"
+                      href="https://www.omrimeron.com"
                       target="_blank"
                       rel="noopener noreferrer"
                       className="font-bold text-neutral-600 no-underline hover:underline"
